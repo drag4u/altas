@@ -1,0 +1,4 @@
+node_modules
+data/logs
+data/files
+data/mcu.db

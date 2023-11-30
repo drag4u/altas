@@ -1,0 +1,220 @@
+body {
+	margin: 0px;
+	background-color: #817F75;
+}
+.content {
+    position: absolute;
+    width: 84%;
+    max-width: 1600px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 60px;
+}
+.content-part
+{
+	margin-top: 16px;
+    box-shadow: 0px 0px 6px -3px #2e2e2e;
+    background-color: #EEF0F2;
+    min-height: 30px;
+    padding-bottom: 0.1px;
+}
+.content-part.overflown
+{
+    overflow-x: auto;
+    text-align: center;
+}
+.ConfigCategory {
+    display: inline-block;
+    width: calc(50% - 22px);
+    padding: 10px;
+    margin: 0px;
+}
+.CategoryTitle {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    background: white;
+    padding: 5px;
+}
+.MatrixInput input {
+    width: 40px;
+    float: right;
+}
+.MatrixInput .label {
+    display: inline-block;
+}
+.MatrixInput {
+    display: inline-block;
+    width: calc(50% - 14px);
+    background: white;
+    padding: 6px;
+}
+.CategoryContent {
+    padding: 10px 0px;
+}
+@media (max-width: 700px) {
+    .ConfigCategory {
+        width: calc(100% - 20px);
+    }
+}
+.button {
+    background: #F4AC45;
+    color: white;
+    padding: 6px 16px;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0px 5px 11px -7px #565656;
+    display: inline-block;
+    border-radius: 3px;
+    user-select: none;
+}
+.button.centered {
+    transform: translate(-50%);
+    position: absolute;
+}
+.buttonHolder {
+    padding: 10px;
+    padding-top: 10px;
+    position: relative;
+    height: 37px;
+    text-align: center;
+    background: white;
+    margin: 10px;
+    margin-top: -8px;
+}
+.button:hover {
+    box-shadow: 0px 5px 11px -7px #3b3b3b;
+}
+input.matrixInput {
+    width: 40px;
+}
+.matrixTableHolder {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 32px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+.matrixTableName {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    background: white;
+    padding: 5px;
+    margin-bottom: 8px;
+}
+.header {
+    position: absolute;
+    width: 84%;
+    max-width: 1600px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 60px;
+    padding: 16px;
+    color: #f3ab4f;
+    font-weight: bold;
+    font-size: 38px;
+    font-family: monospace;
+}
+#notificationPlaceholder {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    padding: 16px;
+}
+.notification {
+    background: #FF8484;
+    margin-top: 16px;
+    padding: 32px 16px 16px 16px;
+    color: white;
+    font-size: 20px;
+    position: relative;
+    border-radius: 3px;
+    box-shadow: 0px 3px 9px -7px #393939;
+    border: solid 1px dimgrey;
+}
+.notificationCloseButton {
+    position: absolute;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    top: 6px;
+    right: 16px;
+    font-size: 16px;
+}
+.notificationCloseButton:hover {
+    color: white;
+}
+.matrixList{
+    width: 100%;
+}
+.matrixList tr:first-child {
+    background: white;
+}
+.matrixList tr:first-child td:not(.dataPreviewTable tr:first-child td) {
+    font-weight: bold;
+}
+.matrixList, .matrixList tr, .matrixList td {
+    border: 1px inset white;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+.matrixList td:first-child {
+    width: 116px;
+}
+.matrixList td:nth-child(2) {
+    vertical-align: top;
+}
+.matrixList td:nth-child(3) {
+    vertical-align: top;
+}
+.matrixList td{
+    padding: 5px;
+}
+.dataPreviewTable td{
+    padding: 0px;
+    height: 16px;
+    min-width: 16px;
+    background: white;
+    border: none;
+}
+.dataPreviewTable td:first-child{
+    width: auto;
+}
+.functionButton {
+    background: grey;
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 2px;
+    margin: 2px;
+    border: black 1px solid;
+    color: white;
+    cursor: pointer;
+}
+.functionTableData
+{
+    min-width: 222px;
+    vertical-align: top;
+}
+.activeRow
+{
+    background: #f3ab4f;
+}
+.matrixIDHolder {
+    position: absolute;
+    left: 0px;
+    margin: 10px;
+}
+img.logo {
+    display: inline-block;
+    width: 320px;
+    margin-left: -29px;
+    margin-top: -20px;
+}
+.sublogo {
+    vertical-align: top;
+    line-height: 47px;
+    font-size: 43px;
+    float: right;
+    font-weight: 100;
+}
