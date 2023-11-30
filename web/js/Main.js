@@ -132,7 +132,7 @@ function UpdateTypeTable()
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
 			let fileLink = document.createElement('a');
-			fileLink.href = `http://localhost:3000/files/${row.coc_file}`;
+			fileLink.href = `http://176.223.137.161:3000/files/${row.coc_file}`;
 			fileLink.textContent = row.coc_file;
 			fileLink.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);

@@ -1,10 +1,11 @@
 class ApiController
 {
+	mainUrl = '176.223.137.161'
 	// MATRIX
 	GetAllMatrices(typeId, callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/matrix/all/" + typeId,
+			url: "http://"+ this.mainUrl + ":3000/matrix/all/" + typeId,
 			type: "GET",
 			dataType: "json",
 			success: response => callback(response),
@@ -15,7 +16,7 @@ class ApiController
 	CreateMatrix(typeId, tableInfo, callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/matrix/create/" + typeId,
+			url: "http://"+ this.mainUrl + ":3000/matrix/create/" + typeId,
 			type: "POST",
 			contentType : 'application/json',
 			dataType: "json",
@@ -28,7 +29,7 @@ class ApiController
 	EditMatrix(matrixId, tableInfo, callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/matrix/edit/" + matrixId,
+			url: "http://"+ this.mainUrl + ":3000/matrix/edit/" + matrixId,
 			type: "POST",
 			contentType : 'application/json',
 			dataType: "json",
@@ -42,7 +43,7 @@ class ApiController
 	{
 		// todo typeId is not needed, can get it from matrix table
 		$.ajax({
-			url: `http://localhost:3000/matrix/copy/${typeId}/${matrixId}`,
+			url: `http://${this.mainUrl}:3000/matrix/copy/${typeId}/${matrixId}`,
 			type: "POST",
 			dataType: "json",
 			success: response => callback(response),
@@ -53,7 +54,7 @@ class ApiController
 	DeleteMatrix(matrixId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/matrix/${matrixId}`,
+			url: `http://${this.mainUrl}:3000/matrix/${matrixId}`,
 			type: "DELETE",
 			dataType: "json",
 			success: response => callback(response),
@@ -65,7 +66,7 @@ class ApiController
 	GetType(typeId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/${typeId}`,
+			url: `http://${this.mainUrl}:3000/type/${typeId}`,
 			type: "GET",
 			dataType: "json",
 			success: response => callback(response),
@@ -76,7 +77,7 @@ class ApiController
 	GetAllTypes(callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/type/all",
+			url: "http://"+ this.mainUrl + ":3000/type/all",
 			type: "GET",
 			dataType: "json",
 			success: response => callback(response),
@@ -87,7 +88,7 @@ class ApiController
 	CreateType(formData, callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/type/create",
+			url: "http://"+ this.mainUrl + ":3000/type/create",
 			type: "POST",
 			data: formData,
 			processData: false,
@@ -100,7 +101,7 @@ class ApiController
 	EditType(typeId, formData, callback)
 	{
 		$.ajax({
-			url: "http://localhost:3000/type/edit/" + typeId,
+			url: "http://"+ this.mainUrl + ":3000/type/edit/" + typeId,
 			type: "POST",
 			data: formData,
 			processData: false,
@@ -113,7 +114,7 @@ class ApiController
 	EditTypeRemoveColumn(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/removeColumn/${typeId}/${versionVariant}/${columnId}`,
+			url: `http://${this.mainUrl}:3000/type/removeColumn/${typeId}/${versionVariant}/${columnId}`,
 			type: "POST",
 			dataType: "json",
 			success: response => callback(response),
@@ -124,7 +125,7 @@ class ApiController
 	EditTypeAddColumn(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/addColumn/${typeId}/${versionVariant}/${columnId}`,
+			url: `http://${this.mainUrl}:3000/type/addColumn/${typeId}/${versionVariant}/${columnId}`,
 			type: "POST",
 			dataType: "json",
 			success: response => callback(response),
@@ -135,7 +136,7 @@ class ApiController
 	EditTypeRemoveRow(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/removeRow/${typeId}/${versionVariant}/${columnId}`,
+			url: `http://${this.mainUrl}:3000/type/removeRow/${typeId}/${versionVariant}/${columnId}`,
 			type: "POST",
 			dataType: "json",
 			success: response => callback(response),
@@ -146,7 +147,7 @@ class ApiController
 	EditTypeAddRow(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/addRow/${typeId}/${versionVariant}/${columnId}`,
+			url: `http://${this.mainUrl}:3000/type/addRow/${typeId}/${versionVariant}/${columnId}`,
 			type: "POST",
 			dataType: "json",
 			success: response => callback(response),
@@ -157,7 +158,7 @@ class ApiController
 	DeleteType(typeId, callback)
 	{
 		$.ajax({
-			url: `http://localhost:3000/type/${typeId}`,
+			url: `http://${this.mainUrl}:3000/type/${typeId}`,
 			type: "DELETE",
 			dataType: "json",
 			success: response => callback(response),
