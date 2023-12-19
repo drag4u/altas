@@ -90,9 +90,15 @@ module.exports = (logger, database, utils) => {
         },
 		deleteMatrix: async (req, res) => {
 			const {id} = req.params;
-			utils.ExecuteAction(res, `DELETE FROM matrix WHERE matrix_id = ${id}`, () => {
-				utils.ExecuteAction(res, `DELETE FROM matrix_value WHERE matrix_id = ${id}`, () => {
-					res.status(200).json({info: 'successfully deleted'});
+			utils.ExecuteAction(res, `SELECT type_id FROM matrix where matrix_id = ${id}`, typeRows => {
+				const typeId = typeRows[0].type_id;
+				
+				utils.ExecuteAction(res, `DELETE FROM matrix WHERE matrix_id = ${id}`, () => {
+					utils.ExecuteAction(res, `DELETE FROM matrix_value WHERE matrix_id = ${id}`, () => {
+						utils.UpdateTypeSchema(res, typeId, () => {
+							res.status(200).json({info: 'Matrix successfully deleted'});
+						});
+					});
 				});
 			});
 		}

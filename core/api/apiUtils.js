@@ -25,49 +25,93 @@ class ApiUtils
 		this.ExecuteAction(res, `SELECT * FROM schema_values WHERE type_id = ${typeId}`, schema_rows => {
 			console.log("SCHEMA ROWS: ", schema_rows);
 			this.ExecuteAction(res, `SELECT * from matrix where type_id = ${typeId}`, matrix_rows => {
-				let query = `SELECT * FROM matrix_value WHERE matrix_id IN (`;
-				matrix_rows.forEach(row => {
-					query += `${row.matrix_id},`;
-				});
-				query = query.slice(0, -1);
-				query += `);`;
-				this.ExecuteAction(res, query, value_rows => {
-					this.ExecuteAction(res, `SELECT * FROM type where type_id = ${typeId}`, typeData => {
-						let schemaData = this.PrepareSchemaData(value_rows, typeData);
-						schemaData = this.RemoveAlreadyExisting(schemaData, schema_rows);
-						console.log("schema data: ", schemaData);
-
-						var atLeastOneRowExists = false;
-						let query = `INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, nessesary) VALUES `;
-						for (let i = 0; i < schemaData.versionMatrix.length; i++) {
-							for (let j = 0; j < schemaData.versionMatrix[i].length; j++) {
-								atLeastOneRowExists = true;
-								const dataRow = schemaData.versionMatrix[i];
-								query += `(${typeId}, 0, ${i}, "${dataRow[j]}", 1),`;
-							}
-						}
-						for (let i = 0; i < schemaData.variantMatrix.length; i++) {
-							for (let j = 0; j < schemaData.variantMatrix[i].length; j++) {
-								atLeastOneRowExists = true;
-								const dataRow = schemaData.variantMatrix[i];
-								query += `(${typeId}, 1, ${i}, "${dataRow[j]}", 1),`;
-							}
-						}
-						query = query.slice(0, -1);
-						query += `;`;
-						if (atLeastOneRowExists)
-						{
-							this.ExecuteAction(res, query, () => {
-								callback()
-							});
-						} else {
-							console.log('No new rows needed to be inserted int othe schema');
-							callback();
-						}
+				if (matrix_rows.length == 0) {
+					this.ExecuteAction(res, `delete from schema_values where type_id = ${typeId}`, () => {
+						callback();
 					});
-				});
+				} else {
+					let query = `SELECT * FROM matrix_value WHERE matrix_id IN (`;
+					matrix_rows.forEach(row => {
+						query += `${row.matrix_id},`;
+					});
+					query = query.slice(0, -1);
+					query += `);`;
+					this.ExecuteAction(res, query, value_rows => {
+						this.ExecuteAction(res, `SELECT * FROM type where type_id = ${typeId}`, typeData => {
+							let originalSchemaData = this.PrepareSchemaData(value_rows, typeData);
+							let schemaData = this.RemoveAlreadyExisting(originalSchemaData, schema_rows);
+							console.log("schema data: ", schemaData);
+
+							var atLeastOneRowExists = false;
+							let query = `INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, nessesary) VALUES `;
+							for (let i = 0; i < schemaData.versionMatrix.length; i++) {
+								for (let j = 0; j < schemaData.versionMatrix[i].length; j++) {
+									atLeastOneRowExists = true;
+									const dataRow = schemaData.versionMatrix[i];
+									query += `(${typeId}, 0, ${i}, "${dataRow[j]}", 1),`;
+								}
+							}
+							for (let i = 0; i < schemaData.variantMatrix.length; i++) {
+								for (let j = 0; j < schemaData.variantMatrix[i].length; j++) {
+									atLeastOneRowExists = true;
+									const dataRow = schemaData.variantMatrix[i];
+									query += `(${typeId}, 1, ${i}, "${dataRow[j]}", 1),`;
+								}
+							}
+							query = query.slice(0, -1);
+							query += `;`;
+
+							let THIS = this;
+							function Continue()
+							{
+								var toDelete = THIS.GetValueIdsToDelete(originalSchemaData, schema_rows);
+								if (toDelete.length == 0){
+									callback();
+									return;
+								}
+								let deleteQuery = 'DELETE FROM schema_values WHERE schema_value_id IN (';
+								toDelete.forEach(id => {
+									deleteQuery += `${id},`;
+								});
+								deleteQuery = deleteQuery.slice(0, -1);
+								deleteQuery += `);`;
+								THIS.ExecuteAction(res, deleteQuery, () => {
+									callback();
+								});
+							}
+
+							if (atLeastOneRowExists)
+							{
+								this.ExecuteAction(res, query, () => {
+									Continue();
+								});
+							} else {
+								console.log('No new rows needed to be inserted into the schema');
+								Continue();
+							}
+						});
+					});
+				}
 			});
 		});
+	}
+
+	GetValueIdsToDelete(schemaData, schemaRows)
+	{
+		const idsToDelete = [];
+		for (let i = 0; i < schemaRows.length; i++) {
+			const row = schemaRows[i];
+			if (row.version_variant == 0) {
+				if (schemaData.versionMatrix[row.column].indexOf(row.unique_matrix_value) == -1) {
+					idsToDelete.push(row.schema_value_id);
+				}
+			} else {
+				if (schemaData.variantMatrix[row.column].indexOf(row.unique_matrix_value) == -1) {
+					idsToDelete.push(row.schema_value_id);
+				}
+			}
+		}
+		return idsToDelete;
 	}
 
 	PrepareSchemaData(matrixData, activeTypeData)
