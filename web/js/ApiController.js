@@ -1,6 +1,6 @@
 class ApiController
 {
-	mainUrl = '176.223.137.161'
+	mainUrl = location.hostname;
 	// MATRIX
 	GetAllMatrices(typeId, callback)
 	{
@@ -159,6 +159,52 @@ class ApiController
 	{
 		$.ajax({
 			url: `http://${this.mainUrl}:3000/type/${typeId}`,
+			type: "DELETE",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	GetSchema(typeId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/${typeId}`,
+			type: "GET",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	GetSchemaData(valueId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/data/${valueId}`,
+			type: "GET",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	CreateSchemaData(valueId, placeholder, data, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/create/" + valueId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ placeholder, data }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	DeleteSchemaData(schemaDataId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/delete/${schemaDataId}`,
 			type: "DELETE",
 			dataType: "json",
 			success: response => callback(response),

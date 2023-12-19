@@ -29,6 +29,7 @@ class API{
 		this.typeController = require('./controllers/typeController')(logger, database, this.utils );
 		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
+		this.schemaController = require('./controllers/schemaController')(logger, database, this.utils );
 		this.InitializeEndpoints();
 		this.app.listen(port, () => this.logger.info('Server has started on port: ' + port));
 	}
@@ -53,6 +54,11 @@ class API{
 		this.app.delete('/matrix/:id', this.matrixController.deleteMatrix);
 		this.app.post('/matrix/edit/:id', this.matrixController.editMatrix);
 		this.app.post('/matrix/copy/:typeId/:matrixId', this.matrixController.copyMatrix);
+
+		this.app.get('/schema/:typeId', this.schemaController.getSchema);
+		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData);
+		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData);
+		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
 	}
 }
 

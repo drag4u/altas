@@ -79,11 +79,18 @@ module.exports = (logger, database, utils) => {
 			if (versionVariant == 1) {
 				typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns - 1 WHERE type_id = ${typeId};`;
 			}
+
+			let schemaDeleteQuery = `DELETE FROM schema_values WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column = ${columnId};`;
+			let schemaUpdateQuery = `UPDATE schema_values SET column = column - 1 WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column > ${columnId};`;
 			
 			utils.ExecuteAction(res, typeUpdateQuery, () => {
 				utils.ExecuteAction(res, deleteQuery, () => {
 					utils.ExecuteAction(res, updateQuery, () => {
-						res.status(200).json({info: 'successfully deleted a column from type'});
+						utils.ExecuteAction(res, schemaDeleteQuery, () => {
+							utils.ExecuteAction(res, schemaUpdateQuery, () => {
+								res.status(200).json({info: 'successfully deleted a column from type'});
+							});
+						});
 					});
 				});
 			});
@@ -135,17 +142,22 @@ module.exports = (logger, database, utils) => {
 				if (versionVariant == 1) {
 					typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns + 1 WHERE type_id = ${typeId};`;
 				}
-			
+				
+				// Shift subsequent columns to the right
+				let schemaUpdateQuery = `UPDATE schema_values SET column = column + 1 WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column >= ${columnId};`;
+		
 				// Execute the queries
-				utils.ExecuteAction(res, typeUpdateQuery, () => {
-					utils.ExecuteAction(res, updateQuery, () => {
-						// Execute each insert query
-						insertQueries.forEach(insertQuery => {
-							utils.ExecuteAction(res, insertQuery, () => {
-								// Handle completion or errors for each query
+				utils.ExecuteAction(res, schemaUpdateQuery, () => {
+					utils.ExecuteAction(res, typeUpdateQuery, () => {
+						utils.ExecuteAction(res, updateQuery, () => {
+							// Execute each insert query
+							insertQueries.forEach(insertQuery => {
+								utils.ExecuteAction(res, insertQuery, () => {
+									// Handle completion or errors for each query
+								});
 							});
+							res.status(200).json({info: 'Successfully added a column to the type'});
 						});
-						res.status(200).json({info: 'Successfully added a column to the type'});
 					});
 				});
 			});

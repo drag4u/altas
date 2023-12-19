@@ -60,27 +60,19 @@ class DatabaseInitializer {
 				column integer not null,
 				value text not null
 			);
-			create table schema (
-				schema_id integer primary key AUTOINCREMENT,
+			create table schema_values (
+				schema_value_id integer primary key AUTOINCREMENT,
 				type_id integer not null,
-				schema_name text not null
-			);
-			create table schema_index (
-				schema_index_id integer primary key AUTOINCREMENT,
-				schema_id integer not null,
+				version_variant integer not null,
 				column integer not null,
-				matrix_value text not null,
-				can_be_ignored integer not null
+				unique_matrix_value text not null,
+				nessesary integer not null
 			);
-			create table data_column (
-				data_column_id integer primary key AUTOINCREMENT,
-				ordering integer not null,
-				name text not null
-			);
-			create table schema_value (
-				data_column_id integer not null,
-				schema_index_id integer not null,
-				value text not null
+			create table schema_data (
+				schema_data_id integer primary key AUTOINCREMENT,
+				schema_value_id integer not null,
+				placeholder text not null,
+				data text not null
 			);
 		`, err  => {
 			if (err) {

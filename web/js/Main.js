@@ -4,6 +4,7 @@ let typeMatrixData = null;
 let matrixToBeDeleted = null;
 let matrixToBeCopied = null;
 let activeTypeData = null;
+let activeSchemaValue = null;
 
 const API = new ApiController();
 
@@ -111,6 +112,7 @@ function DeleteMatrix()
 // PAGE MANAGEMENT
 function ShowTypePage() {
 	$('#matrixPage').hide();
+	$('#schemaPage').hide();
 	$('#typePage').show();
 	UpdateTypeTable(); // Refresh the type table if needed
 }
@@ -132,15 +134,18 @@ function UpdateTypeTable()
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
 			let fileLink = document.createElement('a');
-			fileLink.href = `http://176.223.137.161:3000/files/${row.coc_file}`;
+			fileLink.href = `http://${location.hostname}:3000/files/${row.coc_file}`;
 			fileLink.textContent = row.coc_file;
 			fileLink.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-sm btn-success" onclick="ShowTypeEditModal(${row.type_id})"">Redaguoti</button>
-					<button type="button" class="btn btn-sm btn-primary" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
-					<button type="button" class="btn btn-sm btn-warning" disabled>Kopijuoti</button>
+					<button type="button" class="btn btn-sm btn-success" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
+					<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
+				</div>
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeEditModal(${row.type_id})"">Redaguoti</button>
+					<button type="button" class="btn btn-sm btn-secondary" disabled>Kopijuoti</button>
 					<button type="button" class="btn btn-sm btn-danger" onClick="ShowTypeDeleteModal(this, ${row.type_id})">Ištrinti</button>
 				</div>
 			`;
@@ -229,6 +234,73 @@ function ShowTypeEditModal(typeId, callback)
 	});
 }
 
+function ShowEditSchemaModal(schemaId)
+{
+	activeSchemaValue = schemaId;
+	UpdateSchemaDataTable(schemaId, () => {
+		$('#editSchemaModal').modal('show');
+	});
+}
+
+function UpdateSchemaDataTable(schemaId, callback)
+{
+	API.GetSchemaData(schemaId, response => {
+		console.log('response');
+		console.log(response);
+		const tBody = document.getElementById("schemaEditTable");
+		tBody.innerHTML = "";
+		Object.keys(response).forEach( dataId => {
+			const tr = document.createElement("tr");
+			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].placeholder;
+			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].data;
+			tr.appendChild(document.createElement("td")).innerHTML = `
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-sm btn-success" onClick="ShowEditMatrixModal(${dataId})">Redaguoti</button>
+					<button type="button" class="btn btn-sm btn-danger" onClick="DeleteSchemaData(${response[dataId].schema_data_id})">Ištrinti</button>
+				</div>
+			`;
+			tBody.appendChild(tr);
+		});
+		callback();
+		$('#editSchemaModal').modal('show');
+	});
+}
+
+function DeleteSchemaData(dataId)
+{
+	API.DeleteSchemaData(dataId, () => {
+		UpdateSchemaDataTable(activeSchemaValue, () => {});
+	});
+
+}
+
+function AddSchemaData()
+{
+	let abort = false;
+	if ($('#newSchemaPlaceholder').val() == '')
+	{
+		abort = true;
+		$('#newSchemaPlaceholder').removeClass('is-valid').addClass('is-invalid');
+	} else {
+		$('#newSchemaPlaceholder').removeClass('is-invalid').addClass('is-valid');
+	}
+	if ($('#newSchemaData').val() == '')
+	{
+		abort = true;
+		$('#newSchemaData').removeClass('is-valid').addClass('is-invalid');
+	} else {
+		$('#newSchemaData').removeClass('is-invalid').addClass('is-valid');
+	}
+	if (abort)
+		return;
+	API.CreateSchemaData(activeSchemaValue, $('#newSchemaPlaceholder').val(), $('#newSchemaData').val(), () => {
+		UpdateSchemaDataTable(activeSchemaValue, () => {
+			$('#newSchemaPlaceholder').removeClass('is-valid').val('');
+			$('#newSchemaData').removeClass('is-valid').val('');
+		})
+	});
+}
+
 function ShowTypeDeleteModal(target, id)
 {
 	target.parentNode.parentElement.parentElement.classList.add("table-danger");
@@ -237,14 +309,95 @@ function ShowTypeDeleteModal(target, id)
 	$('#deleteTypeModal').modal('show');
 }
 
-
 function ShowMatrixPage(typeId) {
 	API.GetType(typeId, typeData => {
+		matrixHeader = document.getElementById("matrixHeader");
+		matrixHeader.innerText = `Tipo "${typeData[0].type_name}" matricų sąrašas`;
 		activeTypeData = typeData;
 		$('#typePage').hide();
 		$('#matrixPage').show();
 		UpdateMatrixTable(typeId);
 	});
+}
+
+function ShowSchemaPage(typeId) {
+	API.GetType(typeId, typeData => {
+		matrixHeader = document.getElementById("schemaHeader");
+		matrixHeader.innerText = `"${typeData[0].type_name}" schema:`;
+		activeTypeData = typeData;
+		$('#typePage').hide();
+		$('#schemaPage').show();
+		
+		API.GetSchema(typeId, response => {
+			$('#schemaVersionMatrixBody')[0].innerHTML = '';
+			$('#schemaVariantMatrixBody')[0].innerHTML = '';
+			$('#schemaVersionMatrixHead tr')[0].innerHTML = '';
+			$('#schemaVariantMatrixHead tr')[0].innerHTML = '';
+
+			console.log(response);
+
+			for (let k = 0; k < activeTypeData[0].version_columns; k++) {
+				$('#schemaVersionMatrixHead tr').append(`<th scope="col">${k + 1} st.</th>`);
+			}
+			
+			for (let i = 0; i < GetAmountOfRowsToRender(response, 0); i++) {
+				const row = document.createElement("tr");
+				for (let j = 0; j < activeTypeData[0].version_columns; j++) {
+					const cell = document.createElement("td");
+					
+					const columndata = response.filter(c => c.version_variant == 0 && c.column == j)[i];
+					if (columndata != undefined)
+					{
+						const schemaId = columndata.schema_value_id;
+						cell.innerHTML = `
+							<button type="button" class="btn btn-sm btn-success" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
+								${columndata.unique_matrix_value}
+							</button>
+						`;
+					}
+					row.appendChild(cell);
+				}
+				$('#schemaVersionMatrixBody').append(row);
+			}
+			
+			for (let k = 0; k < activeTypeData[0].variant_columns; k++) {
+				$('#schemaVariantMatrixHead tr').append(`<th scope="col">${k + 1} st.</th>`);
+			}
+			
+			for (let i = 0; i < GetAmountOfRowsToRender(response, 1); i++) {
+				const row = document.createElement("tr");
+				for (let j = 0; j < activeTypeData[0].variant_columns; j++) {
+					const cell = document.createElement("td");
+					
+					const columndata = response.filter(c => c.version_variant == 1 && c.column == j)[i];
+					if (columndata != undefined)
+					{
+						const schemaId = columndata.schema_value_id;
+						cell.innerHTML = `
+							<button type="button" class="btn btn-sm btn-success" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
+								${columndata.unique_matrix_value}
+							</button>
+						`;
+					}
+					row.appendChild(cell);
+				}
+				$('#schemaVariantMatrixBody').append(row);
+			}
+		});
+	});
+}
+
+function GetAmountOfRowsToRender(data, versionVariant)
+{
+	let max = 0;
+	const filteredData = data.filter(c => c.version_variant == versionVariant);
+	filteredData.forEach(row => {
+		if (row.column > max)
+		{
+			max = row.column;
+		}
+	});
+	return max + 1;
 }
 
 function UpdateMatrixTable(typeId)
