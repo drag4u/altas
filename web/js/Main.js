@@ -603,6 +603,8 @@ function ShowCreateMatrixModal() {
 		}
 		variantMatrix.appendChild(row);
 	}
+	AddArrowButtonSupport('#versionMatrix');
+	AddArrowButtonSupport('#variantMatrix');
 }
 
 function ShowEditMatrixModal(id) {
@@ -675,6 +677,44 @@ function ShowEditMatrixModal(id) {
 		if (row.version_variant == 1) {
 			$(`#editVariantMatrix input[data-row=${row.row}][data-col=${row.column}]`).val(row.value);
 		}
+	});
+	AddArrowButtonSupport('#editVersionMatrix');
+	AddArrowButtonSupport('#editVariantMatrix');
+}
+
+function AddArrowButtonSupport(id)
+{
+	document.querySelectorAll(id + ' input').forEach(input => {
+		input.addEventListener('keydown', function(e) {
+			const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+			if (!allowedKeys.includes(e.key)) {
+				return;
+			}
+	
+			const currentRow = parseInt(this.getAttribute('data-row'));
+			const currentCol = parseInt(this.getAttribute('data-col'));
+			let newRow = currentRow, newCol = currentCol;
+	
+			switch (e.key) {
+				case 'ArrowLeft':
+					newCol = Math.max(currentCol - 1, 0);
+					break;
+				case 'ArrowRight':
+					newCol = currentCol + 1;
+					break;
+				case 'ArrowUp':
+					newRow = Math.max(currentRow - 1, 0);
+					break;
+				case 'ArrowDown':
+					newRow = currentRow + 1;
+					break;
+			}
+	
+			const nextInput = document.querySelector(`${id} input[data-row="${newRow}"][data-col="${newCol}"]`);
+			if (nextInput) {
+				nextInput.focus();
+			}
+		});
 	});
 }
 
