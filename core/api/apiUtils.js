@@ -43,7 +43,7 @@ class ApiUtils
 							console.log("schema data: ", schemaData);
 
 							var atLeastOneRowExists = false;
-							let query = `INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, nessesary) VALUES `;
+							let query = `INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, necessary) VALUES `;
 							for (let i = 0; i < schemaData.versionMatrix.length; i++) {
 								for (let j = 0; j < schemaData.versionMatrix[i].length; j++) {
 									atLeastOneRowExists = true;

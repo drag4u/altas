@@ -201,6 +201,32 @@ class ApiController
 		});
 	}
 
+	EditSchemaData(schemaDataId, placeholder, data, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/edit/" + schemaDataId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ placeholder, data }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	UpdateSchemaNecessity(schemaDataId, necessity, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/necessity/" + schemaDataId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ necessity }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	DeleteSchemaData(schemaDataId, callback)
 	{
 		$.ajax({

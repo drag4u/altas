@@ -5,6 +5,11 @@ let matrixToBeDeleted = null;
 let matrixToBeCopied = null;
 let activeTypeData = null;
 let activeSchemaValue = null;
+let activeSchemaData = null;
+let schemasTypeId = null;
+let previousSchemaDataRowsPlaceholderValue = null;
+let previousSchemaDataRowsDataValue = null;
+let schemaDataIdBeingEdited = null;
 
 const API = new ApiController();
 
@@ -238,24 +243,36 @@ function ShowEditSchemaModal(schemaId)
 {
 	activeSchemaValue = schemaId;
 	UpdateSchemaDataTable(schemaId, () => {
+		const schemaData = activeSchemaData.filter(c => c.schema_value_id == schemaId)[0];
+
+		const name = `Schemos redagavimas: [${schemaData.version_variant == 0 ? 'Versijų' : 'Variantų'} matrica, ${schemaData.column + 1} stulpelis, "${schemaData.unique_matrix_value}" reikšmė]`;
+		$('#editSchemaModal .modal-header .modal-title')[0].innerHTML = name;
 		$('#editSchemaModal').modal('show');
+		$('#schemaNessasaryCheckbox').off('change', SaveSchemaValueNecessity);
+		$('#schemaNessasaryCheckbox').on('change', SaveSchemaValueNecessity);
+		$('#schemaNessasaryCheckbox').prop('checked', schemaData.necessary == 0 );
+	});
+}
+
+function SaveSchemaValueNecessity() {
+	API.UpdateSchemaNecessity(activeSchemaValue, this.checked ? 0 : 1, () => {
+		ShowSchemaPage(schemasTypeId);
 	});
 }
 
 function UpdateSchemaDataTable(schemaId, callback)
 {
 	API.GetSchemaData(schemaId, response => {
-		console.log('response');
-		console.log(response);
 		const tBody = document.getElementById("schemaEditTable");
 		tBody.innerHTML = "";
 		Object.keys(response).forEach( dataId => {
 			const tr = document.createElement("tr");
+			$(tr).attr("data-value-id", response[dataId].schema_data_id);
 			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].placeholder;
 			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].data;
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-sm btn-success" onClick="ShowEditMatrixModal(${dataId})">Redaguoti</button>
+					<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaData(${response[dataId].schema_data_id})">Redaguoti</button>
 					<button type="button" class="btn btn-sm btn-danger" onClick="DeleteSchemaData(${response[dataId].schema_data_id})">Ištrinti</button>
 				</div>
 			`;
@@ -269,9 +286,84 @@ function UpdateSchemaDataTable(schemaId, callback)
 function DeleteSchemaData(dataId)
 {
 	API.DeleteSchemaData(dataId, () => {
+		ShowSchemaPage(schemasTypeId);
 		UpdateSchemaDataTable(activeSchemaValue, () => {});
 	});
 
+}
+
+function EditSchemaData(dataId)
+{
+	if (schemaDataIdBeingEdited != null)
+		CancelSchemaDataRow(schemaDataIdBeingEdited);
+	schemaDataIdBeingEdited = dataId;
+	const tds = $(`[data-value-id="${dataId}"] td`);
+	const placeholder = tds[0].innerText;
+	const data = tds[1].innerText;
+	previousSchemaDataRowsPlaceholderValue = placeholder;
+	previousSchemaDataRowsDataValue = data;
+	const button1 = $(tds[2]).find('button')[0];
+	const button2 = $(tds[2]).find('button')[1];
+	tds[0].innerHTML = `
+		<div class="form-floating">
+			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaPlaceholder" value="${placeholder}" required>
+		</div>
+	`;
+	tds[1].innerHTML = `
+		<div class="form-floating">
+			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaData" value="${data}" required>
+		</div>
+	`;
+	button1.innerText = 'Išsaugoti';
+	button2.innerText = 'Atšaukti';
+	button1.classList.remove('btn-warning');
+	button1.classList.add('btn-success');
+	button1.attributes.onclick.value = `SaveSchemaDataRow(${dataId})`;
+	button2.attributes.onclick.value = `CancelSchemaDataRow(${dataId})`;
+}
+
+function CancelSchemaDataRow(dataId)
+{
+	schemaDataIdBeingEdited = null;
+	const tds = $(`[data-value-id="${dataId}"] td`);
+	const button1 = $(tds[2]).find('button')[0];
+	const button2 = $(tds[2]).find('button')[1];
+	tds[0].innerHTML = previousSchemaDataRowsPlaceholderValue;
+	tds[1].innerHTML = previousSchemaDataRowsDataValue;
+	button1.innerText = 'Redaguoti';
+	button2.innerText = 'Ištrinti';
+	button1.classList.remove('btn-success');
+	button1.classList.add('btn-warning');
+	button1.attributes.onclick.value = `EditSchemaData(${dataId})`;
+	button2.attributes.onclick.value = `DeleteSchemaData(${dataId})`;
+}
+
+function SaveSchemaDataRow(dataId)
+{
+	schemaDataIdBeingEdited = null;
+	let abort = false;
+	if ($('#editSchemaPlaceholder').val() == '')
+	{
+		abort = true;
+		$('#editSchemaPlaceholder').removeClass('is-valid').addClass('is-invalid');
+	} else {
+		$('#editSchemaPlaceholder').removeClass('is-invalid').addClass('is-valid');
+	}
+	if ($('#editSchemaData').val() == '')
+	{
+		abort = true;
+		$('#editSchemaData').removeClass('is-valid').addClass('is-invalid');
+	} else {
+		$('#editSchemaData').removeClass('is-invalid').addClass('is-valid');
+	}
+	if (abort)
+		return;
+	API.EditSchemaData(dataId, $('#editSchemaPlaceholder').val(), $('#editSchemaData').val(), () => {
+		UpdateSchemaDataTable(activeSchemaValue, () => {
+			$('#editSchemaPlaceholder').removeClass('is-valid').val('');
+			$('#editSchemaData').removeClass('is-valid').val('');
+		})
+	});
 }
 
 function AddSchemaData()
@@ -294,6 +386,7 @@ function AddSchemaData()
 	if (abort)
 		return;
 	API.CreateSchemaData(activeSchemaValue, $('#newSchemaPlaceholder').val(), $('#newSchemaData').val(), () => {
+		ShowSchemaPage(schemasTypeId);
 		UpdateSchemaDataTable(activeSchemaValue, () => {
 			$('#newSchemaPlaceholder').removeClass('is-valid').val('');
 			$('#newSchemaData').removeClass('is-valid').val('');
@@ -321,6 +414,7 @@ function ShowMatrixPage(typeId) {
 }
 
 function ShowSchemaPage(typeId) {
+	schemasTypeId = typeId;
 	API.GetType(typeId, typeData => {
 		matrixHeader = document.getElementById("schemaHeader");
 		matrixHeader.innerText = `"${typeData[0].type_name}" schema:`;
@@ -329,12 +423,12 @@ function ShowSchemaPage(typeId) {
 		$('#schemaPage').show();
 		
 		API.GetSchema(typeId, response => {
+			activeSchemaData = response;
 			$('#schemaVersionMatrixBody')[0].innerHTML = '';
 			$('#schemaVariantMatrixBody')[0].innerHTML = '';
 			$('#schemaVersionMatrixHead tr')[0].innerHTML = '';
 			$('#schemaVariantMatrixHead tr')[0].innerHTML = '';
 
-			console.log(response);
 
 			for (let k = 0; k < activeTypeData[0].version_columns; k++) {
 				$('#schemaVersionMatrixHead tr').append(`<th scope="col">${k + 1} st.</th>`);
@@ -349,8 +443,14 @@ function ShowSchemaPage(typeId) {
 					if (columndata != undefined)
 					{
 						const schemaId = columndata.schema_value_id;
+						let dataClass = columndata.necessary ? 'btn-danger' : 'btn-success';
+						API.GetSchemaData(schemaId, response => {
+							if (response.length > 0)
+								dataClass = 'btn-success';
+							$(cell).find('button').removeClass('btn-secondary').addClass(dataClass);
+						});
 						cell.innerHTML = `
-							<button type="button" class="btn btn-sm btn-success" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
+							<button type="button" class="btn btn-sm btn-secondary" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
 								${columndata.unique_matrix_value}
 							</button>
 						`;
@@ -373,8 +473,14 @@ function ShowSchemaPage(typeId) {
 					if (columndata != undefined)
 					{
 						const schemaId = columndata.schema_value_id;
+						let dataClass = columndata.necessary ? 'btn-danger' : 'btn-success';
+						API.GetSchemaData(schemaId, response => {
+							if (response.length > 0)
+								dataClass = 'btn-success';
+							$(cell).find('button').removeClass('btn-secondary').addClass(dataClass);
+						});
 						cell.innerHTML = `
-							<button type="button" class="btn btn-sm btn-success" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
+							<button type="button" class="btn btn-sm btn-secondary" style="width: 50px;" data-value-id="${schemaId}" onClick="ShowEditSchemaModal(${schemaId})">
 								${columndata.unique_matrix_value}
 							</button>
 						`;
@@ -389,15 +495,22 @@ function ShowSchemaPage(typeId) {
 
 function GetAmountOfRowsToRender(data, versionVariant)
 {
-	let max = 0;
+	let columnsAmount = {}
 	const filteredData = data.filter(c => c.version_variant == versionVariant);
 	filteredData.forEach(row => {
-		if (row.column > max)
+		if (Object.keys(columnsAmount).indexOf(row.column.toString()) == -1)
 		{
-			max = row.column;
+			columnsAmount[row.column] = 1;
+		} else {
+			columnsAmount[row.column]++;
 		}
 	});
-	return max + 1;
+	let result = 0;
+	Object.keys(columnsAmount).forEach(key => {
+		if (columnsAmount[key] > result)
+			result = columnsAmount[key];
+	});
+	return result;
 }
 
 function UpdateMatrixTable(typeId)
@@ -623,7 +736,6 @@ function CreateMatrixDivTable(matrixValues, versionVariant)
 	div.style.width = (40 * columnAmount)+ "px";
 	div.style.height = (24 * rowAmount)+ "px";
 	
-	console.log(matrixValues);
 	matrixValues.forEach(row => {
 		if (row.version_variant == versionVariant) {
 			let inputdiv = document.createElement("div");

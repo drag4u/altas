@@ -66,7 +66,7 @@ class DatabaseInitializer {
 				version_variant integer not null,
 				column integer not null,
 				unique_matrix_value text not null,
-				nessesary integer not null
+				necessary integer not null
 			);
 			create table schema_data (
 				schema_data_id integer primary key AUTOINCREMENT,

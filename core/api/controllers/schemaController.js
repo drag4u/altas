@@ -24,6 +24,22 @@ module.exports = (logger, database, utils) => {
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
         },
 
+		editSchemaData: async (req, res) => {
+			const dataId = req.params.dataId;
+			const { placeholder, data } = req.body;
+
+			let query = `UPDATE schema_data SET placeholder = '${placeholder}', data = '${data}' WHERE schema_data_id = ${dataId}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+        },
+		
+		editSchemaNecessity: async (req, res) => {
+			const dataId = req.params.dataId;
+			const { necessity } = req.body;
+
+			let query = `UPDATE schema_values SET necessary = '${necessity}' WHERE schema_value_id = ${dataId}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+        },
+
 		deleteSchemaData: async (req, res) => {
 			const dataId = req.params.dataId;
 			let query = `DELETE FROM schema_data WHERE schema_data_id = ${dataId}`;

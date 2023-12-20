@@ -58,6 +58,9 @@ class API{
 		this.app.get('/schema/:typeId', this.schemaController.getSchema);
 		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData);
 		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData);
+		this.app.post('/schema/edit/:dataId', this.schemaController.editSchemaData);
+		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity);
+		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
 		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
 	}
 }
