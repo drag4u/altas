@@ -30,6 +30,10 @@ module.exports = (logger, database, utils) => {
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully updated'}));
         },
+		removeCoCFile: async (req, res) => {
+			let query = `UPDATE type SET coc_file = null WHERE type_id = ${req.params.id}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CoC file'}));
+		},
 		fetchType: async (req, res) => {
 			const {id} = req.params;
 			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {

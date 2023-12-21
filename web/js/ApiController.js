@@ -111,6 +111,17 @@ class ApiController
 		});
 	}
 
+	DeleteCoCFile(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/type/removeCoC/" + typeId,
+			type: "POST",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	EditTypeRemoveColumn(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({

@@ -132,9 +132,10 @@ function UpdateTypeTable()
 		}
 		const tBody = document.getElementById("typeTable");
 		tBody.innerHTML = "";
+		let typeIndex = 1;
 		response.forEach(row => {
 			const tr = document.createElement("tr");
-			tr.appendChild(document.createElement("td")).innerText = row.type_id;
+			tr.appendChild(document.createElement("td")).innerText = typeIndex;
 			tr.appendChild(document.createElement("td")).innerText = row.type_name;
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
@@ -155,7 +156,17 @@ function UpdateTypeTable()
 				</div>
 			`;
 			tBody.appendChild(tr);
+			typeIndex++;
 		});
+	});
+}
+
+function DeleteCoCFile()
+{
+	let typeId = activeTypeData[0].type_id;
+	API.DeleteCoCFile(typeId, () => {
+		$('#editCocFile').val('');
+		ShowTypeEditModal(typeId, () => {});
 	});
 }
 
@@ -165,6 +176,8 @@ function ShowTypeEditModal(typeId, callback)
 		activeTypeData = typeData;
 		$('#editTypeModal').modal('show');
 		document.getElementById("editTypeName").value = typeData[0].type_name;
+		document.getElementById("editCoCFileLabel").innerText = typeData[0].coc_file;
+		$('#CoCDeleteButton').attr('disabled', typeData[0].coc_file == null);
 		$('#editTypeVersion').prop("checked", false);
 		$('#editTypeVariant').prop("checked", false);
 		ActivateTypeMatrixEditor(true);
@@ -526,9 +539,10 @@ function UpdateMatrixTable(typeId)
 
 		const tBody = document.getElementById("matrixTable");
 		tBody.innerHTML = "";
+		let matrixIndex = 1;
 		Object.keys(rowData).forEach( matrixId => {
 			const tr = document.createElement("tr");
-			tr.appendChild(document.createElement("td")).innerText = matrixId;
+			tr.appendChild(document.createElement("td")).innerText = matrixIndex;
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 0);
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 1);
 			tr.appendChild(document.createElement("td")).innerText = 0;
@@ -540,6 +554,7 @@ function UpdateMatrixTable(typeId)
 				</div>
 			`;
 			tBody.appendChild(tr);
+			matrixIndex++;
 		});
 	});
 }
