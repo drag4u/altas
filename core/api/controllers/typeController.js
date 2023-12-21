@@ -30,6 +30,35 @@ module.exports = (logger, database, utils) => {
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully updated'}));
         },
+		copyType: async (req, res) => {
+			const {id} = req.params;
+			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {
+				let type = rows[0];
+				let query = '';
+				if (type.coc_file == null)
+				{
+					query = `INSERT INTO type (type_name, version_columns, version_rows, variant_columns, variant_rows, coc_file) VALUES ('${type.type_name}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}, null)`;
+				} else {
+					query = `INSERT INTO type (type_name, version_columns, version_rows, variant_columns, variant_rows, coc_file) VALUES ('${type.type_name}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}, '${type.coc_file}')`;
+				}
+				
+				utils.ExecuteAction(res, query, () => {
+					// get new type id
+					utils.ExecuteAction(res, `SELECT MAX(type_id) as "id" FROM type`, newTypeRows => {
+						const newTypeId = newTypeRows[0].id;
+						console.log(newTypeId);
+						res.status(200).json({info: 'successfully copied'})
+						// // get all matrices for old type and copy them for new type
+						// utils.ExecuteAction(res, `SELECT * from matrix where type_id = ${id}`, matrixRows => {
+						// 	if (matrixRows.length == 0) {
+						// 		res.status(200).json({info: 'successfully copied'});
+						// 	} else {
+								
+						// res.status(200).json({info: 'successfully copied'})
+					});
+				});
+			});
+		},
 		removeCoCFile: async (req, res) => {
 			let query = `UPDATE type SET coc_file = null WHERE type_id = ${req.params.id}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CoC file'}));

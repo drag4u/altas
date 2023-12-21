@@ -111,6 +111,18 @@ class ApiController
 		});
 	}
 
+	CopyType(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/type/copy/" + typeId,
+			type: "POST",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	
+	}
+
 	DeleteCoCFile(typeId, callback)
 	{
 		$.ajax({

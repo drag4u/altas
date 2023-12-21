@@ -145,15 +145,11 @@ function UpdateTypeTable()
 			fileLink.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);
 			tr.appendChild(document.createElement("td")).innerHTML = `
-				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-sm btn-success" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
-					<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
-				</div>
-				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeEditModal(${row.type_id})"">Redaguoti</button>
-					<button type="button" class="btn btn-sm btn-secondary" disabled>Kopijuoti</button>
-					<button type="button" class="btn btn-sm btn-danger" onClick="ShowTypeDeleteModal(this, ${row.type_id})">Ištrinti</button>
-				</div>
+				<button type="button" class="btn btn-sm btn-success" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
+				<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
+				<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeEditModal(${row.type_id})">Redaguoti</button>
+				<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeCopyModal(${row.type_id})">Kopijuoti</button>
+				<button type="button" class="btn btn-sm btn-danger" onClick="ShowTypeDeleteModal(this, ${row.type_id})">Ištrinti</button>
 			`;
 			tBody.appendChild(tr);
 			typeIndex++;
@@ -413,6 +409,21 @@ function ShowTypeDeleteModal(target, id)
 	setTimeout(() => target.parentNode.parentElement.parentElement.classList.remove("table-danger"), 6000);
 	typeToBeDeleted = id;
 	$('#deleteTypeModal').modal('show');
+}
+
+function ShowTypeCopyModal(id)
+{
+	$('#typeCopySubmitButton').attr('onclick', `CopyType(${id})`);
+	$('#copyTypeModal').modal('show');
+}
+
+function CopyType(id)
+{
+	console.log('Should copy: ' + id);
+	API.CopyType(id, () => {
+		$('#copyTypeModal').modal('hide');
+		UpdateTypeTable();
+	});
 }
 
 function ShowMatrixPage(typeId) {

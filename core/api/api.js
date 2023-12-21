@@ -38,6 +38,7 @@ class API{
 		this.app.get('/type/all', this.typeController.getAllTypes);
 		this.app.post('/type/create', upload.single('cocFile'), this.typeController.createType);
 		this.app.post('/type/edit/:id', upload.single('editCocFile'), this.typeController.editType);
+		this.app.post('/type/copy/:id', this.typeController.copyType);
 		this.app.post('/type/removeCoC/:id', this.typeController.removeCoCFile);
 		this.app.get('/type/:id', this.typeController.fetchType);
 		this.app.post('/type/update', this.typeController.updateType);
