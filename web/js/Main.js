@@ -145,7 +145,7 @@ function UpdateTypeTable()
 			fileLink.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);
 			tr.appendChild(document.createElement("td")).innerHTML = `
-				<button type="button" class="btn btn-sm btn-success" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
+				<button type="button" class="btn btn-sm btn-primary" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
 				<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
 				<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeEditModal(${row.type_id})">Redaguoti</button>
 				<button type="button" class="btn btn-sm btn-warning" onclick="ShowTypeCopyModal(${row.type_id})">Kopijuoti</button>
@@ -556,7 +556,7 @@ function UpdateMatrixTable(typeId)
 			tr.appendChild(document.createElement("td")).innerText = matrixIndex;
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 0);
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 1);
-			tr.appendChild(document.createElement("td")).innerText = 0;
+			tr.appendChild(document.createElement("td")).innerText = GetCombinations(rowData[matrixId]);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
 					<button type="button" class="btn btn-sm btn-success" onClick="ShowEditMatrixModal(${matrixId})">Redaguoti</button>
@@ -568,6 +568,20 @@ function UpdateMatrixTable(typeId)
 			matrixIndex++;
 		});
 	});
+}
+
+function GetCombinations(matrixData)
+{
+	let totalAmount = 1;
+	for(let i = 0; i < activeTypeData[0].version_columns; i++)
+	{
+		totalAmount *= matrixData.filter(c => c.version_variant == 0 && c.column == i && c.value != '').length;
+	}
+	for(let i = 0; i < activeTypeData[0].variant_columns; i++)
+	{
+		totalAmount *= matrixData.filter(c => c.version_variant == 1 && c.column == i && c.value != '').length;
+	}
+	return totalAmount;
 }
 
 function ShowCreateMatrixModal() {

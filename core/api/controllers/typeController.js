@@ -47,14 +47,101 @@ module.exports = (logger, database, utils) => {
 					utils.ExecuteAction(res, `SELECT MAX(type_id) as "id" FROM type`, newTypeRows => {
 						const newTypeId = newTypeRows[0].id;
 						console.log(newTypeId);
-						res.status(200).json({info: 'successfully copied'})
-						// // get all matrices for old type and copy them for new type
-						// utils.ExecuteAction(res, `SELECT * from matrix where type_id = ${id}`, matrixRows => {
-						// 	if (matrixRows.length == 0) {
-						// 		res.status(200).json({info: 'successfully copied'});
-						// 	} else {
-								
-						// res.status(200).json({info: 'successfully copied'})
+						let matricesQuery = `SELECT * FROM matrix WHERE type_id = ${id}`;
+						utils.ExecuteAction(res, matricesQuery, existingTypeMatrices => {
+							// get all matrix values for these matrices
+							let matrixIds = '';
+							let oldMatrixIdsArray = [];
+							existingTypeMatrices.forEach(row => { 
+								matrixIds += `${row.matrix_id},`; 
+								oldMatrixIdsArray.push(row.matrix_id);
+							});
+							matrixIds = matrixIds.slice(0, -1);
+							let matrixValuesQuery = `SELECT * FROM matrix_value WHERE matrix_id IN (${matrixIds})`;
+							/////////////////////////
+							utils.ExecuteAction(res, matrixValuesQuery, currentMatrixValuesRows => {
+								// insert new matrices for new type
+								let newMatricesQuery = 'INSERT INTO matrix (type_id) VALUES ';
+								existingTypeMatrices.forEach(row => {
+									newMatricesQuery += `(${newTypeId}), `;
+								});
+								newMatricesQuery = newMatricesQuery.slice(0, -2);
+								newMatricesQuery += ';';
+								// INSERT INTO matrix (type_id) VALUES (14), (14), (14);
+								utils.ExecuteAction(res, newMatricesQuery, () => {
+									// get new matrix ids for new matrices
+									let newMatrixIdsQuery = `SELECT * FROM matrix WHERE type_id = ${newTypeId}`;
+									utils.ExecuteAction(res, newMatrixIdsQuery, newMatrixIdsRows => {
+										let newMatrixIds = '';
+										let newMatrixIdsArray = [];
+										newMatrixIdsRows.forEach(row => { 
+											newMatrixIds += `${row.matrix_id},`; 
+											newMatrixIdsArray.push(row.matrix_id);
+										});
+										newMatrixIds = newMatrixIds.slice(0, -1);
+										
+										currentMatrixValuesRows.forEach(row => {
+											row.matrix_id = newMatrixIdsArray[oldMatrixIdsArray.indexOf(row.matrix_id)];
+										});
+										// copy old matrix values by changing matrix_id to new matrix id
+										let newMatrixValuesQuery = 'INSERT INTO matrix_value (matrix_id, version_variant, row, column, value) VALUES ';
+										
+										currentMatrixValuesRows.forEach(row => {
+											newMatrixValuesQuery += `(${row.matrix_id}, ${row.version_variant}, ${row.row}, ${row.column}, '${row.value}'), `;
+										});
+										newMatrixValuesQuery = newMatrixValuesQuery.slice(0, -2);
+										newMatrixValuesQuery += ';';
+										utils.ExecuteAction(res, newMatrixValuesQuery, () => {
+											// select old type schema values
+											let schemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${id}`;
+											utils.ExecuteAction(res, schemaValuesQuery, schemaValuesRows => {
+												let oldSchemaValueIdArray = [];
+												schemaValuesRows.forEach(row => {
+													row.type_id = newTypeId;
+													oldSchemaValueIdArray.push(row.schema_value_id);
+												});
+												// insert new type schema values
+												let newSchemaValuesQuery = 'INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, necessary) VALUES ';
+												schemaValuesRows.forEach(row => {
+													newSchemaValuesQuery += `(${row.type_id}, ${row.version_variant}, ${row.column}, '${row.unique_matrix_value}', ${row.necessary}), `;
+												});
+												newSchemaValuesQuery = newSchemaValuesQuery.slice(0, -2);
+												newSchemaValuesQuery += ';';
+												utils.ExecuteAction(res, newSchemaValuesQuery, () => {
+													// select new schema values with newTypeId
+													let newSchemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${newTypeId}`;
+													utils.ExecuteAction(res, newSchemaValuesQuery, newSchemaValuesRows => {
+														let newSchemaValueIdArray = [];
+														newSchemaValuesRows.forEach(row => {
+															newSchemaValueIdArray.push(row.schema_value_id);
+														});
+
+														// select old schema data from oldSchemaValueIdArray
+														let schemaDataQuery = `SELECT * FROM schema_data WHERE schema_value_id IN (${oldSchemaValueIdArray})`;
+														utils.ExecuteAction(res, schemaDataQuery, schemaDataRows => {
+															schemaDataRows.forEach(row => {
+																row.schema_value_id = newSchemaValueIdArray[oldSchemaValueIdArray.indexOf(row.schema_value_id)];
+															});
+															// insert new schema data
+															let newSchemaDataQuery = 'INSERT INTO schema_data (schema_value_id, placeholder, data) VALUES ';
+															schemaDataRows.forEach(row => {
+																newSchemaDataQuery += `(${row.schema_value_id}, '${row.placeholder}', '${row.data}'), `;
+															}
+															);
+															newSchemaDataQuery = newSchemaDataQuery.slice(0, -2);
+															newSchemaDataQuery += ';';
+															utils.ExecuteAction(res, newSchemaDataQuery, () => {
+																res.status(200).json({info: 'successfully copied'});
+															});
+														});
+													});
+												});
+											});
+										});
+									});
+								});
+							});
+						});
 					});
 				});
 			});
