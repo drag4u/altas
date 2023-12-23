@@ -51,10 +51,12 @@
 				<thead class="table-dark">
 					<tr>
 						<th scope="col">ID</th>
-						<th scope="col">Tipo pavadinimas</th>
+						<th scope="col">Patvirtinimo numeris</th>
+						<th scope="col">Tipas</th>
+						<th scope="col">Variantas</th>
 						<th scope="col">Versija</th>
-						<th scope="col">Varijantas</th>
 						<th scope="col">CoC šablonas</th>
+						<th scope="col">CNIT šablonas</th>
 						<th scope="col">Komandos</th>
 					</tr>
 				</thead>
@@ -84,8 +86,9 @@
 				<thead class="table-dark">
 					<tr>
 						<th scope="col">ID</th>
-						<th scope="col">Versija</th>
+						<th scope="col">Tipas</th>
 						<th scope="col">Variantas</th>
+						<th scope="col">Versija</th>
 						<th scope="col">Kombinacijos</th>
 						<th scope="col">Komandos</th>
 					</tr>
@@ -111,6 +114,19 @@
 			</div>
 			<div class="container">
 				<div class="row">
+					<h4>Variantų matricos schema</h4>
+				</div>
+				<div class="row">
+					<div class="container" id="schemaVariantContainer">
+						<table class="table table-striped table-hover">
+							<thead class="table-dark" id="schemaVariantMatrixHead">
+								<tr></tr>
+							</thead>
+							<tbody id="schemaVariantMatrixBody"></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
 					<h4>Versijų matricos schema</h4>
 				</div>
 				<div class="row">
@@ -124,15 +140,32 @@
 					</div>
 				</div>
 				<div class="row">
-					<h4>Variantų matricos schema</h4>
+					<div class="col">
+						<h4>Įvesties laukeliai</h4>
+					</div>
+					<div class="col">
+						<button type="button" class="btn btn-sm btn-success float-end" onclick="ShowSchemaFieldModal()">
+							Pridėti laukelį
+						</button>
+					</div>
 				</div>
 				<div class="row">
-					<div class="container" id="schemaVariantContainer">
+					<div class="container">
 						<table class="table table-striped table-hover">
-							<thead class="table-dark" id="schemaVariantMatrixHead">
-								<tr></tr>
+							<thead class="table-dark">
+								<tr>
+									<th>Laukelio pavadinimas</th>
+									<th>Žymuo</th>
+									<th style="width: 300px;">Komandos</th>
+								</tr>
 							</thead>
-							<tbody id="schemaVariantMatrixBody"></tbody>
+							<tbody id="schemaFieldBody">
+								<tr>
+									<td>Laukelio pavadinimas</td>
+									<td>Žymuo</td>
+									<td>Komandos</td>
+								</tr>
+							</tbody>
 						</table>
 					</div>
 				</div>
@@ -152,7 +185,13 @@
 								<div class="col">
 									<div class="form-floating mb-3">
 										<input type="text" class="form-control" id="typeName" placeholder="Tipas" required >
-										<label for="typeName">Tipo pavadinimas</label>
+										<label for="typeName">Tipas</label>
+									</div>
+								</div>
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="typeCode" placeholder="Patvirtinimo numeris" required >
+										<label for="typeCode">Patvirtinimo numeris</label>
 									</div>
 								</div>
 							</div>
@@ -187,8 +226,14 @@
 							<div class="row">
 								<div class="col">
 									<div class="mb-3">
-										<label for="formFile" class="form-label">CoC failo šablonas:</label>
+										<label for="cocFile" class="form-label">CoC failo šablonas:</label>
 										<input class="form-control" type="file" id="cocFile" accept=".docx">
+									</div>
+								</div>
+								<div class="col">
+									<div class="mb-3">
+										<label for="cnitFile" class="form-label">CNIT failo šablonas:</label>
+										<input class="form-control" type="file" id="cnitFile" accept=".xlsx">
 									</div>
 								</div>
 							</div>
@@ -214,7 +259,13 @@
 								<div class="col">
 									<div class="form-floating mb-3">
 										<input type="text" class="form-control" id="editTypeName" placeholder="Tipas" required >
-										<label for="typeName">Tipo pavadinimas</label>
+										<label for="typeName">Tipas</label>
+									</div>
+								</div>
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="editTypeCode" placeholder="Patvirtinimo numeris" required >
+										<label for="editTypeCode">Patvirtinimo numeris</label>
 									</div>
 								</div> 
 							</div>
@@ -230,23 +281,25 @@
 									</div>
 								</div>
 								<div class="col">
-									<label id="editCoCFileLabel" style="margin-right: 16px;">asdasdasd321.docx</label>
+									<label id="editCoCFileLabel" style="margin-right: 16px;"></label>
 									<button type="button" class="btn btn-danger" id="CoCDeleteButton" onclick="DeleteCoCFile()">Ištrinti failą</button>
 								</div>
 							</div>
 							<div class="row">
-								<div class="col">
-									<h5>Versija</h5>
+								<div class="col" style="margin-bottom: 10px;">
+									<label>CNIT failo šablonas:</label>
 								</div>
+							</div>
+							<div class="row">
 								<div class="col">
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" value="" id="editTypeVersion">
-										<label class="form-check-label" for="flexCheckDefault">
-											Redaguoti versijų matricos struktūrą
-										</label>
+									<div class="mb-3">
+										<input class="form-control" type="file" id="editCNITFile" accept=".xlsx">
 									</div>
 								</div>
-								<div id="editTypeVersionMatrix" style="overflow-x: auto; padding-top: 3px;"></div>
+								<div class="col">
+									<label id="editCNITFileLabel" style="margin-right: 16px;"></label>
+									<button type="button" class="btn btn-danger" id="CNITDeleteButton" onclick="DeleteCNITFile()">Ištrinti failą</button>
+								</div>
 							</div>
 							<div class="row">
 								<div class="col">
@@ -261,6 +314,20 @@
 									</div>
 								</div>
 								<div id="editTypeVariantMatrix" style="overflow-x: auto; padding-top: 3px;"></div>
+							</div>
+							<div class="row">
+								<div class="col">
+									<h5>Versija</h5>
+								</div>
+								<div class="col">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" value="" id="editTypeVersion">
+										<label class="form-check-label" for="flexCheckDefault">
+											Redaguoti versijų matricos struktūrą
+										</label>
+									</div>
+								</div>
+								<div id="editTypeVersionMatrix" style="overflow-x: auto; padding-top: 3px;"></div>
 							</div>
 							<div class="row">
 								<div class="col">
@@ -354,6 +421,23 @@
 				</div>
 			</div>
 		</div>
+		<div class="modal fade" id="deleteSchemaFieldModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Laukelio trinimas</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						Ar tikrai norite ištrinti šį laukelį?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+						<button type="button" class="btn btn-danger" onClick="DeleteSchemaField()">Trinti</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- Matrix Modals -->
 		<div class="modal fade" id="createMatrixModal" tabindex="-1" aria-hidden="true">
 			<div class="modal-dialog modal-xl">
@@ -365,12 +449,12 @@
 					<div class="modal-body">
 						<form id="matrixForm" novalidate>
 							<div class="row">
-								<h5>Versija</h5>
-								<div id="versionMatrix" style="overflow-x: auto"></div>
-							</div>
-							<div class="row">
 								<h5>Variantas</h5>
 								<div id="variantMatrix" style="overflow-x: auto"></div>
+							</div>
+							<div class="row">
+								<h5>Versija</h5>
+								<div id="versionMatrix" style="overflow-x: auto"></div>
 							</div>
 						</form>
 					</div>
@@ -391,12 +475,12 @@
 					<div class="modal-body">
 						<form id="editMatrixForm" novalidate>
 							<div class="row">
-								<h5>Versija</h5>
-								<div id="editVersionMatrix" style="overflow-x: auto"></div>
-							</div>
-							<div class="row">
 								<h5>Variantas</h5>
 								<div id="editVariantMatrix" style="overflow-x: auto"></div>
+							</div>
+							<div class="row">
+								<h5>Versija</h5>
+								<div id="editVersionMatrix" style="overflow-x: auto"></div>
 							</div>
 						</form>
 					</div>
@@ -488,6 +572,70 @@
 						<div class="ms-auto">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
 						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="createSchemaFieldsModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Schemos laukelio kūrimas</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="schemaFieldForm" novalidate>
+							<div class="row">
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="schemaFieldName" placeholder="Laukelio pavadinimas" required >
+										<label for="schemaFieldName">Laukelio pavadinimas</label>
+									</div>
+								</div>
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="schemaFieldPlaceholder" placeholder="Žymuo" required >
+										<label for="schemaFieldPlaceholder">Žymuo</label>
+									</div>
+								</div> 
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+						<button type="button" class="btn btn-primary" onclick="CreateSchemaField()">Kurti</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="editSchemaFieldsModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">Schemos laukelio redagavimas</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="schemaFieldEditForm" novalidate>
+							<div class="row">
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="schemaFieldEditName" placeholder="Laukelio pavadinimas" required >
+										<label for="schemaFieldName">Laukelio pavadinimas</label>
+									</div>
+								</div>
+								<div class="col">
+									<div class="form-floating mb-3">
+										<input type="text" class="form-control" id="schemaFieldEditPlaceholder" placeholder="Žymuo" required >
+										<label for="schemaFieldPlaceholder">Žymuo</label>
+									</div>
+								</div> 
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+						<button type="button" class="btn btn-primary" id="editSchemaFieldSubmit" onclick="EditSchemaField()">Redaguoti</button>
 					</div>
 				</div>
 			</div>

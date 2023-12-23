@@ -6,26 +6,34 @@ module.exports = (logger, database, utils) => {
 			});
         },
         createType: async (req, res) => {
-			const { name, versionColumns, versionRows, variantColumns, variantRows } = req.body;
-			const cocFileName = req.file ? `'${req.file.filename}'` : null;
+			const { name, code, versionColumns, versionRows, variantColumns, variantRows } = req.body;
+			const cocFileName = req.files.cocFile ? `'${req.files.cocFile[0].filename}'` : null;
+			const cnitFileName = req.files.cnitFile ? `'${req.files.cnitFile[0].filename}'` : null;
 		
-			let query = `INSERT INTO type (type_name, version_columns, version_rows, variant_columns, variant_rows`;
+			let query = `INSERT INTO type (type_name, type_code, version_columns, version_rows, variant_columns, variant_rows`;
 			if (cocFileName)
 				query += `, coc_file`;
-			query += `) VALUES ('${name}', ${versionColumns}, ${versionRows}, ${variantColumns}, ${variantRows}`;
+			if (cnitFileName)
+				query += `, cnit_file`;
+			query += `) VALUES ('${name}', '${code}', ${versionColumns}, ${versionRows}, ${variantColumns}, ${variantRows}`;
 			if (cocFileName)
 				query += `, ${cocFileName}`;
+			if (cnitFileName)
+				query += `, ${cnitFileName}`;
 			query += `)`;
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
         },
 		editType: async (req, res) => {
-			const { name } = req.body;
-			const cocFileName = req.file ? `'${req.file.filename}'` : null;
+			const { name, code } = req.body;
+			const cocFileName = req.files.editCocFile ? `'${req.files.editCocFile[0].filename}'` : null;
+			const cnitFileName = req.files.editCNITFile ? `'${req.files.editCNITFile[0].filename}'` : null;
 			
-			let query = `UPDATE type SET type_name = '${name}'`;
+			let query = `UPDATE type SET type_name = '${name}', type_code = '${code}'`;
 			if (cocFileName)
 				query += `, coc_file = ${cocFileName}`;
+			if (cnitFileName)
+				query += `, cnit_file = ${cnitFileName}`;
 			query += ` WHERE type_id = ${req.params.id}`;
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully updated'}));
@@ -34,14 +42,11 @@ module.exports = (logger, database, utils) => {
 			const {id} = req.params;
 			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {
 				let type = rows[0];
-				let query = '';
-				if (type.coc_file == null)
-				{
-					query = `INSERT INTO type (type_name, version_columns, version_rows, variant_columns, variant_rows, coc_file) VALUES ('${type.type_name}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}, null)`;
-				} else {
-					query = `INSERT INTO type (type_name, version_columns, version_rows, variant_columns, variant_rows, coc_file) VALUES ('${type.type_name}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}, '${type.coc_file}')`;
-				}
-				
+				let query = `INSERT INTO type (type_name, type_code, version_columns, version_rows, variant_columns, variant_rows, coc_file, cnit_file) VALUES ('${type.type_name}', '${type.type_code}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}`;
+				query += type.coc_file == null ? `, null` : `, '${type.coc_file}'`;
+				query += type.cnit_file == null ? `, null` : `, '${type.cnit_file}'`;
+				query += `);`;
+
 				utils.ExecuteAction(res, query, () => {
 					// get new type id
 					utils.ExecuteAction(res, `SELECT MAX(type_id) as "id" FROM type`, newTypeRows => {
@@ -62,76 +67,84 @@ module.exports = (logger, database, utils) => {
 							utils.ExecuteAction(res, matrixValuesQuery, currentMatrixValuesRows => {
 								// insert new matrices for new type
 								let newMatricesQuery = 'INSERT INTO matrix (type_id) VALUES ';
-								existingTypeMatrices.forEach(row => {
-									newMatricesQuery += `(${newTypeId}), `;
-								});
-								newMatricesQuery = newMatricesQuery.slice(0, -2);
-								newMatricesQuery += ';';
-								// INSERT INTO matrix (type_id) VALUES (14), (14), (14);
-								utils.ExecuteAction(res, newMatricesQuery, () => {
-									// get new matrix ids for new matrices
-									let newMatrixIdsQuery = `SELECT * FROM matrix WHERE type_id = ${newTypeId}`;
-									utils.ExecuteAction(res, newMatrixIdsQuery, newMatrixIdsRows => {
-										let newMatrixIds = '';
-										let newMatrixIdsArray = [];
-										newMatrixIdsRows.forEach(row => { 
-											newMatrixIds += `${row.matrix_id},`; 
-											newMatrixIdsArray.push(row.matrix_id);
-										});
-										newMatrixIds = newMatrixIds.slice(0, -1);
-										
-										currentMatrixValuesRows.forEach(row => {
-											row.matrix_id = newMatrixIdsArray[oldMatrixIdsArray.indexOf(row.matrix_id)];
-										});
-										// copy old matrix values by changing matrix_id to new matrix id
-										let newMatrixValuesQuery = 'INSERT INTO matrix_value (matrix_id, version_variant, row, column, value) VALUES ';
-										
-										currentMatrixValuesRows.forEach(row => {
-											newMatrixValuesQuery += `(${row.matrix_id}, ${row.version_variant}, ${row.row}, ${row.column}, '${row.value}'), `;
-										});
-										newMatrixValuesQuery = newMatrixValuesQuery.slice(0, -2);
-										newMatrixValuesQuery += ';';
-										utils.ExecuteAction(res, newMatrixValuesQuery, () => {
-											// select old type schema values
-											let schemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${id}`;
-											utils.ExecuteAction(res, schemaValuesQuery, schemaValuesRows => {
-												let oldSchemaValueIdArray = [];
-												schemaValuesRows.forEach(row => {
-													row.type_id = newTypeId;
-													oldSchemaValueIdArray.push(row.schema_value_id);
-												});
-												// insert new type schema values
-												let newSchemaValuesQuery = 'INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, necessary) VALUES ';
-												schemaValuesRows.forEach(row => {
-													newSchemaValuesQuery += `(${row.type_id}, ${row.version_variant}, ${row.column}, '${row.unique_matrix_value}', ${row.necessary}), `;
-												});
-												newSchemaValuesQuery = newSchemaValuesQuery.slice(0, -2);
-												newSchemaValuesQuery += ';';
-												utils.ExecuteAction(res, newSchemaValuesQuery, () => {
-													// select new schema values with newTypeId
-													let newSchemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${newTypeId}`;
-													utils.ExecuteAction(res, newSchemaValuesQuery, newSchemaValuesRows => {
-														let newSchemaValueIdArray = [];
-														newSchemaValuesRows.forEach(row => {
-															newSchemaValueIdArray.push(row.schema_value_id);
-														});
-
-														// select old schema data from oldSchemaValueIdArray
-														let schemaDataQuery = `SELECT * FROM schema_data WHERE schema_value_id IN (${oldSchemaValueIdArray})`;
-														utils.ExecuteAction(res, schemaDataQuery, schemaDataRows => {
-															schemaDataRows.forEach(row => {
-																row.schema_value_id = newSchemaValueIdArray[oldSchemaValueIdArray.indexOf(row.schema_value_id)];
+								if (existingTypeMatrices.length == 0) {
+									res.status(200).json({info: 'successfully copied'});
+								} else {
+									existingTypeMatrices.forEach(row => {
+										newMatricesQuery += `(${newTypeId}), `;
+									});
+									newMatricesQuery = newMatricesQuery.slice(0, -2);
+									newMatricesQuery += ';';
+									// INSERT INTO matrix (type_id) VALUES (14), (14), (14);
+									utils.ExecuteAction(res, newMatricesQuery, () => {
+										// get new matrix ids for new matrices
+										let newMatrixIdsQuery = `SELECT * FROM matrix WHERE type_id = ${newTypeId}`;
+										utils.ExecuteAction(res, newMatrixIdsQuery, newMatrixIdsRows => {
+											let newMatrixIds = '';
+											let newMatrixIdsArray = [];
+											newMatrixIdsRows.forEach(row => { 
+												newMatrixIds += `${row.matrix_id},`; 
+												newMatrixIdsArray.push(row.matrix_id);
+											});
+											newMatrixIds = newMatrixIds.slice(0, -1);
+											
+											currentMatrixValuesRows.forEach(row => {
+												row.matrix_id = newMatrixIdsArray[oldMatrixIdsArray.indexOf(row.matrix_id)];
+											});
+											// copy old matrix values by changing matrix_id to new matrix id
+											let newMatrixValuesQuery = 'INSERT INTO matrix_value (matrix_id, version_variant, row, column, value) VALUES ';
+											
+											currentMatrixValuesRows.forEach(row => {
+												newMatrixValuesQuery += `(${row.matrix_id}, ${row.version_variant}, ${row.row}, ${row.column}, '${row.value}'), `;
+											});
+											newMatrixValuesQuery = newMatrixValuesQuery.slice(0, -2);
+											newMatrixValuesQuery += ';';
+											utils.ExecuteAction(res, newMatrixValuesQuery, () => {
+												// select old type schema values
+												let schemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${id}`;
+												utils.ExecuteAction(res, schemaValuesQuery, schemaValuesRows => {
+													let oldSchemaValueIdArray = [];
+													schemaValuesRows.forEach(row => {
+														row.type_id = newTypeId;
+														oldSchemaValueIdArray.push(row.schema_value_id);
+													});
+													// insert new type schema values
+													let newSchemaValuesQuery = 'INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, necessary) VALUES ';
+													schemaValuesRows.forEach(row => {
+														newSchemaValuesQuery += `(${row.type_id}, ${row.version_variant}, ${row.column}, '${row.unique_matrix_value}', ${row.necessary}), `;
+													});
+													newSchemaValuesQuery = newSchemaValuesQuery.slice(0, -2);
+													newSchemaValuesQuery += ';';
+													utils.ExecuteAction(res, newSchemaValuesQuery, () => {
+														// select new schema values with newTypeId
+														let newSchemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${newTypeId}`;
+														utils.ExecuteAction(res, newSchemaValuesQuery, newSchemaValuesRows => {
+															let newSchemaValueIdArray = [];
+															newSchemaValuesRows.forEach(row => {
+																newSchemaValueIdArray.push(row.schema_value_id);
 															});
-															// insert new schema data
-															let newSchemaDataQuery = 'INSERT INTO schema_data (schema_value_id, placeholder, data) VALUES ';
-															schemaDataRows.forEach(row => {
-																newSchemaDataQuery += `(${row.schema_value_id}, '${row.placeholder}', '${row.data}'), `;
-															}
-															);
-															newSchemaDataQuery = newSchemaDataQuery.slice(0, -2);
-															newSchemaDataQuery += ';';
-															utils.ExecuteAction(res, newSchemaDataQuery, () => {
-																res.status(200).json({info: 'successfully copied'});
+	
+															// select old schema data from oldSchemaValueIdArray
+															let schemaDataQuery = `SELECT * FROM schema_data WHERE schema_value_id IN (${oldSchemaValueIdArray})`;
+															utils.ExecuteAction(res, schemaDataQuery, schemaDataRows => {
+																schemaDataRows.forEach(row => {
+																	row.schema_value_id = newSchemaValueIdArray[oldSchemaValueIdArray.indexOf(row.schema_value_id)];
+																});
+																// insert new schema data
+																let newSchemaDataQuery = 'INSERT INTO schema_data (schema_value_id, placeholder, data) VALUES ';
+																if (schemaDataRows.length == 0) {
+																	res.status(200).json({info: 'successfully copied'});
+																} else {
+																	schemaDataRows.forEach(row => {
+																		newSchemaDataQuery += `(${row.schema_value_id}, '${row.placeholder}', '${row.data}'), `;
+																	}
+																	);
+																	newSchemaDataQuery = newSchemaDataQuery.slice(0, -2);
+																	newSchemaDataQuery += ';';
+																	utils.ExecuteAction(res, newSchemaDataQuery, () => {
+																		res.status(200).json({info: 'successfully copied'});
+																	});
+																}
 															});
 														});
 													});
@@ -139,7 +152,7 @@ module.exports = (logger, database, utils) => {
 											});
 										});
 									});
-								});
+								}
 							});
 						});
 					});
@@ -150,6 +163,10 @@ module.exports = (logger, database, utils) => {
 			let query = `UPDATE type SET coc_file = null WHERE type_id = ${req.params.id}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CoC file'}));
 		},
+		removeCNITFile: async (req, res) => {
+			let query = `UPDATE type SET cnit_file = null WHERE type_id = ${req.params.id}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CNIT file'}));
+		},
 		fetchType: async (req, res) => {
 			const {id} = req.params;
 			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {
@@ -157,12 +174,12 @@ module.exports = (logger, database, utils) => {
 			});
 		},
 		updateType: async (req, res) => {
-			const {id, name, versionColumns, versionRows, variantColumns, variantRows, coc_file} = req.body;
+			const {id, name, versionColumns, versionRows, variantColumns, variantRows, coc_file, cnit_file} = req.body;
 			var query = `UPDATE type SET type_name = '${name}', version_columns = ${versionColumns},  version_rows = ${versionRows}, 
-				variant_columns = ${variantColumns}, variant_rows = ${variantRows}, ${coc_file ? `coc_file = '${coc_file}'` : ''}
+				variant_columns = ${variantColumns}, variant_rows = ${variantRows}, ${coc_file ? `coc_file = '${coc_file}'` : ''}, ${cnit_file ? `cnit_file = '${cnit_file}'` : ''}
 				WHERE type_id = ${id}
 			`;
-			utils.ExecuteAction(res, query, rows => {
+			utils.ExecuteAction(res, query, () => {
 				res.status(200).json({info: 'successfully updated'});
 			});
 		},

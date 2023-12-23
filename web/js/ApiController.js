@@ -134,6 +134,77 @@ class ApiController
 		});
 	}
 
+	CreateSchemaField(typeId, fieldName, fieldPlaceholder, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/createField/" + typeId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ fieldName, fieldPlaceholder }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	GetSchemaFields(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/fields/" + typeId,
+			type: "GET",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	DeleteSchemaField(schemaFieldId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/deleteField/${schemaFieldId}`,
+			type: "DELETE",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	GetSchemaField(schemaFieldId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/field/${schemaFieldId}`,
+			type: "GET",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	}
+
+	EditSchemaField(schemaFieldId, fieldName, fieldPlaceholder, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/field/${schemaFieldId}`,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ fieldName, fieldPlaceholder }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	
+	}
+
+	DeleteCNITFile(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/type/removeCNIT/" + typeId,
+			type: "POST",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	EditTypeRemoveColumn(typeId, versionVariant, columnId, callback)
 	{
 		$.ajax({

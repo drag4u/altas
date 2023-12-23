@@ -43,11 +43,13 @@ class DatabaseInitializer {
 			create table type (
 				type_id integer primary key AUTOINCREMENT,
 				type_name text not null,
+				type_code text not null,
 				version_columns integer not null,
 				version_rows integer not null,
 				variant_columns integer not null,
 				variant_rows integer not null,
-				coc_file text
+				coc_file text,
+				cnit_file text
 			);
 			create table matrix (
 				matrix_id integer primary key AUTOINCREMENT,
@@ -73,6 +75,12 @@ class DatabaseInitializer {
 				schema_value_id integer not null,
 				placeholder text not null,
 				data text not null
+			);
+			create table schema_fields (
+				schema_field_id integer primary key AUTOINCREMENT,
+				type_id integer not null,
+				field_name text not null,
+				field_placeholder text not null
 			);
 		`, err  => {
 			if (err) {

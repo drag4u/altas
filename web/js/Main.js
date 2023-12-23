@@ -10,6 +10,7 @@ let schemasTypeId = null;
 let previousSchemaDataRowsPlaceholderValue = null;
 let previousSchemaDataRowsDataValue = null;
 let schemaDataIdBeingEdited = null;
+let schemaFieldToBeDeleted = null;
 
 const API = new ApiController();
 
@@ -26,6 +27,8 @@ function CreateType()
 	
 	const formData = new FormData();
 	formData.append("cocFile", document.getElementById("cocFile").files[0]);
+	formData.append("cnitFile", document.getElementById("cnitFile").files[0]);
+	formData.append("code", document.getElementById("typeCode").value);
 	formData.append("name", document.getElementById("typeName").value);
 	formData.append("versionColumns", document.getElementById("versionColumnAmount").value);
 	formData.append("versionRows", document.getElementById("versionRowAmount").value);
@@ -49,7 +52,9 @@ function EditType()
 	}
 	const formData = new FormData();
 	formData.append("editCocFile", document.getElementById("editCocFile").files[0]);
+	formData.append("editCNITFile", document.getElementById("editCNITFile").files[0]);
 	formData.append("name", document.getElementById("editTypeName").value);
+	formData.append("code", document.getElementById("editTypeCode").value);
 
 	API.EditType(activeTypeData[0].type_id, formData, () => {
 		$('#editTypeModal').modal('hide');
@@ -137,13 +142,19 @@ function UpdateTypeTable()
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = typeIndex;
 			tr.appendChild(document.createElement("td")).innerText = row.type_name;
-			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
+			tr.appendChild(document.createElement("td")).innerText = row.type_code;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
+			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			let fileLink = document.createElement('a');
 			fileLink.href = `http://${location.hostname}:3000/files/${row.coc_file}`;
 			fileLink.textContent = row.coc_file;
 			fileLink.target = '_blank';
+			let fileLink2 = document.createElement('a');
+			fileLink2.href = `http://${location.hostname}:3000/files/${row.cnit_file}`;
+			fileLink2.textContent = row.cnit_file;
+			fileLink2.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);
+			tr.appendChild(document.createElement("td")).append(fileLink2);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<button type="button" class="btn btn-sm btn-primary" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
 				<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
@@ -166,14 +177,26 @@ function DeleteCoCFile()
 	});
 }
 
+function DeleteCNITFile()
+{
+	let typeId = activeTypeData[0].type_id;
+	API.DeleteCNITFile(typeId, () => {
+		$('#editCNITFile').val('');
+		ShowTypeEditModal(typeId, () => {});
+	});
+}
+
 function ShowTypeEditModal(typeId, callback)
 {
 	API.GetType(typeId, typeData => {
 		activeTypeData = typeData;
 		$('#editTypeModal').modal('show');
 		document.getElementById("editTypeName").value = typeData[0].type_name;
+		document.getElementById("editTypeCode").value = typeData[0].type_code;
 		document.getElementById("editCoCFileLabel").innerText = typeData[0].coc_file;
+		document.getElementById("editCNITFileLabel").innerText = typeData[0].cnit_file;
 		$('#CoCDeleteButton').attr('disabled', typeData[0].coc_file == null);
+		$('#CNITDeleteButton').attr('disabled', typeData[0].cnit_file == null);
 		$('#editTypeVersion').prop("checked", false);
 		$('#editTypeVariant').prop("checked", false);
 		ActivateTypeMatrixEditor(true);
@@ -405,8 +428,8 @@ function AddSchemaData()
 
 function ShowTypeDeleteModal(target, id)
 {
-	target.parentNode.parentElement.parentElement.classList.add("table-danger");
-	setTimeout(() => target.parentNode.parentElement.parentElement.classList.remove("table-danger"), 6000);
+	target.parentNode.parentElement.classList.add("table-danger");
+	setTimeout(() => target.parentNode.parentElement.classList.remove("table-danger"), 6000);
 	typeToBeDeleted = id;
 	$('#deleteTypeModal').modal('show');
 }
@@ -419,7 +442,6 @@ function ShowTypeCopyModal(id)
 
 function CopyType(id)
 {
-	console.log('Should copy: ' + id);
 	API.CopyType(id, () => {
 		$('#copyTypeModal').modal('hide');
 		UpdateTypeTable();
@@ -515,6 +537,37 @@ function ShowSchemaPage(typeId) {
 			}
 		});
 	});
+	API.GetSchemaFields(typeId, response => {
+		const tBody = document.getElementById("schemaFieldBody");
+		tBody.innerHTML = "";
+		Object.keys(response).forEach( fieldId => {
+			const tr = document.createElement("tr");
+			$(tr).attr("schema-field-data-id", response[fieldId].schema_field_id);
+			tr.appendChild(document.createElement("td")).innerHTML = response[fieldId].field_name;
+			tr.appendChild(document.createElement("td")).innerHTML = response[fieldId].field_placeholder;
+			tr.appendChild(document.createElement("td")).innerHTML = `
+				<button type="button" class="btn btn-sm btn-warning" onClick="ShowSchemaFieldEditModal(${response[fieldId].schema_field_id})">Redaguoti</button>
+				<button type="button" class="btn btn-sm btn-danger" onClick="ShowSchemaFieldDeleteModal(this, ${response[fieldId].schema_field_id})">Ištrinti</button>
+			`;
+			tBody.appendChild(tr);
+		});
+	});
+}
+
+function ShowSchemaFieldDeleteModal(target, id)
+{
+	target.parentNode.parentElement.classList.add("table-danger");
+	setTimeout(() => target.parentNode.parentElement.classList.remove("table-danger"), 6000);
+	schemaFieldToBeDeleted = id;
+	$('#deleteSchemaFieldModal').modal('show');
+}
+
+function DeleteSchemaField()
+{
+	API.DeleteSchemaField(schemaFieldToBeDeleted, () => {
+		$('#deleteSchemaFieldModal').modal('hide');
+		ShowSchemaPage(schemasTypeId);
+	});
 }
 
 function GetAmountOfRowsToRender(data, versionVariant)
@@ -554,8 +607,9 @@ function UpdateMatrixTable(typeId)
 		Object.keys(rowData).forEach( matrixId => {
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = matrixIndex;
-			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 0);
+			tr.appendChild(document.createElement("td")).innerText = activeTypeData[0].type_name;
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 1);
+			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 0);
 			tr.appendChild(document.createElement("td")).innerText = GetCombinations(rowData[matrixId]);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
@@ -582,6 +636,52 @@ function GetCombinations(matrixData)
 		totalAmount *= matrixData.filter(c => c.version_variant == 1 && c.column == i && c.value != '').length;
 	}
 	return totalAmount;
+}
+
+function ShowSchemaFieldModal() {
+	$('#createSchemaFieldsModal').modal('show');
+}
+
+function ShowSchemaFieldEditModal(fieldId) {
+	$('#editSchemaFieldsModal').modal('show');
+	API.GetSchemaField(fieldId, response => {
+		$('#schemaFieldEditName').val(response[0].field_name);
+		$('#schemaFieldEditPlaceholder').val(response[0].field_placeholder);
+	});
+	$('#editSchemaFieldSubmit').attr('onclick', `EditSchemaField(${fieldId})`);
+}
+
+function EditSchemaField(fieldId) {
+	// calls bootstrap to validate fields
+	const form = document.getElementById('schemaFieldEditForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+	API.EditSchemaField(fieldId, $('#schemaFieldEditName').val(), $('#schemaFieldEditPlaceholder').val(), () => {
+		$('#editSchemaFieldsModal').modal('hide');
+		ShowSchemaPage(schemasTypeId);
+	});
+}
+
+
+function CreateSchemaField()
+{
+	const form = document.getElementById('schemaFieldForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+	API.CreateSchemaField(activeTypeData[0].type_id, $('#schemaFieldName').val(), $('#schemaFieldPlaceholder').val(), () => {
+		$('#schemaFieldName').val('');
+		$('#schemaFieldPlaceholder').val('');
+		$('#createSchemaFieldsModal').modal('hide');
+		ShowSchemaPage(activeTypeData[0].type_id);
+	});
 }
 
 function ShowCreateMatrixModal() {

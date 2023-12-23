@@ -36,10 +36,11 @@ class API{
 
 	InitializeEndpoints(){
 		this.app.get('/type/all', this.typeController.getAllTypes);
-		this.app.post('/type/create', upload.single('cocFile'), this.typeController.createType);
-		this.app.post('/type/edit/:id', upload.single('editCocFile'), this.typeController.editType);
+		this.app.post('/type/create', upload.fields([{ name: 'cocFile', maxCount: 1 }, { name: 'cnitFile', maxCount: 1 }]), this.typeController.createType);
+		this.app.post('/type/edit/:id', upload.fields([{ name: 'editCocFile', maxCount: 1 }, { name: 'editCNITFile', maxCount: 1 }]), this.typeController.editType);
 		this.app.post('/type/copy/:id', this.typeController.copyType);
 		this.app.post('/type/removeCoC/:id', this.typeController.removeCoCFile);
+		this.app.post('/type/removeCNIT/:id', this.typeController.removeCNITFile);
 		this.app.get('/type/:id', this.typeController.fetchType);
 		this.app.post('/type/update', this.typeController.updateType);
 		this.app.delete('/type/:id', this.typeController.deleteType);
@@ -63,7 +64,11 @@ class API{
 		this.app.post('/schema/edit/:dataId', this.schemaController.editSchemaData);
 		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity);
 		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
-		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
+		this.app.post('/schema/createField/:typeId', this.schemaController.createField);
+		this.app.get('/schema/fields/:fieldId', this.schemaController.getFields);
+		this.app.get('/schema/field/:fieldId', this.schemaController.getField);
+		this.app.post('/schema/field/:fieldId', this.schemaController.editField);
+		this.app.delete('/schema/deleteField/:dataId', this.schemaController.deleteSchemaFieldData);
 	}
 }
 

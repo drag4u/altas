@@ -40,9 +40,47 @@ module.exports = (logger, database, utils) => {
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
         },
 
+		createField: async (req, res) => {
+			const typeId = req.params.typeId;
+			const { fieldName, fieldPlaceholder } = req.body;
+
+			let query = `INSERT INTO schema_fields (type_id, field_name, field_placeholder) VALUES (${typeId}, '${fieldName}', '${fieldPlaceholder}')`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+		},
+
+		getFields: async (req, res) => {
+			const fieldId = req.params.fieldId;
+			
+			utils.ExecuteAction(res, `SELECT * from schema_fields where type_id = ${fieldId}`, rows => {
+				res.status(200).json(rows);
+			});
+		},
+
+		getField: async (req, res) => {
+			const fieldId = req.params.fieldId;
+			
+			utils.ExecuteAction(res, `SELECT * from schema_fields where schema_field_id = ${fieldId}`, rows => {
+				res.status(200).json(rows);
+			});
+		},
+
+		editField: async (req, res) => {
+			const fieldId = req.params.fieldId;
+			const { fieldName, fieldPlaceholder } = req.body;
+
+			let query = `UPDATE schema_fields SET field_name = '${fieldName}', field_placeholder = '${fieldPlaceholder}' WHERE schema_field_id = ${fieldId}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+		},
+
 		deleteSchemaData: async (req, res) => {
 			const dataId = req.params.dataId;
 			let query = `DELETE FROM schema_data WHERE schema_data_id = ${dataId}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
+		},
+
+		deleteSchemaFieldData: async (req, res) => {
+			const dataId = req.params.dataId;
+			let query = `DELETE FROM schema_fields WHERE schema_field_id = ${dataId}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
 		}
     };
