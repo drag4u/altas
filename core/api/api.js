@@ -30,6 +30,7 @@ class API{
 		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
 		this.schemaController = require('./controllers/schemaController')(logger, database, this.utils );
+		this.generatorController = require('./controllers/generatorController')(logger, database, this.utils );
 		this.InitializeEndpoints();
 		this.app.listen(port, () => this.logger.info('Server has started on port: ' + port));
 	}
@@ -69,6 +70,8 @@ class API{
 		this.app.get('/schema/field/:fieldId', this.schemaController.getField);
 		this.app.post('/schema/field/:fieldId', this.schemaController.editField);
 		this.app.delete('/schema/deleteField/:dataId', this.schemaController.deleteSchemaFieldData);
+
+		this.app.post('/generateCoC/:typeId', this.generatorController.GenerateCoC);
 	}
 }
 

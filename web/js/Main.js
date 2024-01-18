@@ -11,6 +11,7 @@ let previousSchemaDataRowsPlaceholderValue = null;
 let previousSchemaDataRowsDataValue = null;
 let schemaDataIdBeingEdited = null;
 let schemaFieldToBeDeleted = null;
+let schemaDataBeingCopied = null;
 
 const API = new ApiController();
 
@@ -141,8 +142,8 @@ function UpdateTypeTable()
 		response.forEach(row => {
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = typeIndex;
-			tr.appendChild(document.createElement("td")).innerText = row.type_name;
 			tr.appendChild(document.createElement("td")).innerText = row.type_code;
+			tr.appendChild(document.createElement("td")).innerText = row.type_name;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			let fileLink = document.createElement('a');
@@ -666,6 +667,65 @@ function EditSchemaField(fieldId) {
 	});
 }
 
+function ShowGenerateCoCModal()
+{
+	$('#cocGenerateModal').modal('show');
+	API.GetAllTypes(response => {
+		$('#cocTypeSelect').html('');
+		response.forEach(type => {
+			$('#cocTypeSelect').append(`<option value="${type.type_id}">${type.type_name}</option>`);
+		});
+		$('#cocTypeSelect').off('change').on('change', function() {
+			API.GetSchemaFields(this.value, fields => {
+				$('#cocCustomFieldHolder').html('');
+				let index = 0;
+				fields.forEach(field => {
+					$('#cocCustomFieldHolder').append(`
+						<div class="input-group mb-1">
+							<span class="input-group-text" id="customFieldAddon${index}">${field.field_name}</span>
+							<input type="text" class="form-control" id="customField${index}" aria-describedby="customFieldAddon${index}">
+						</div>
+					`);
+					index++;
+				});
+			});
+			API.GetType(this.value, typeData => {
+				if (typeData[0].coc_file == null)
+				{
+					$('#CoCFileWarning').show();
+					$('#cocGenerateButton').attr('disabled', true);
+				} else {
+					$('#CoCFileWarning').hide();
+					$('#cocGenerateButton').attr('disabled', false );
+				}
+				API.GetSchema(this.value, response => {
+					$('#cocVersionSelects').html('');
+					for (let i = 0; i < typeData[0].version_columns; i++) {
+						let selectElement = document.createElement('select');
+						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
+						response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
+							$(selectElement).append(`<option value="${row.schema_value_id}">${row.unique_matrix_value}</option>`);
+						});
+						$('#cocVersionSelects').append(selectElement);
+					}
+					$('#cocVersionSelects').width(typeData[0].version_columns * 94);
+
+					$('#cocVariantSelects').html('');
+					for (let i = 0; i < typeData[0].variant_columns; i++) {
+						let selectElement = document.createElement('select');
+						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantnSelect' + i);
+						response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
+							$(selectElement).append(`<option value="${row.schema_value_id}">${row.unique_matrix_value}</option>`);
+						});
+						$('#cocVariantSelects').append(selectElement);
+					}
+					$('#cocVariantSelects').width(typeData[0].variant_columns * 94);
+				});
+			});
+		}).trigger('change');
+	});
+}
+
 
 function CreateSchemaField()
 {
@@ -745,6 +805,14 @@ function ShowCreateMatrixModal() {
 	}
 	AddArrowButtonSupport('#versionMatrix');
 	AddArrowButtonSupport('#variantMatrix');
+
+	$(`#versionMatrix input`).each((key, value) => {
+		value.addEventListener('paste', handlePaste);
+	});
+
+	$(`#variantMatrix input`).each((key, value) => {
+		value.addEventListener('paste', handlePaste);
+	});
 }
 
 function ShowEditMatrixModal(id) {
@@ -820,6 +888,38 @@ function ShowEditMatrixModal(id) {
 	});
 	AddArrowButtonSupport('#editVersionMatrix');
 	AddArrowButtonSupport('#editVariantMatrix');
+
+	$(`#editVersionMatrix input`).each((key, value) => {
+		value.addEventListener('paste', handlePaste);
+	});
+
+	$(`#editVariantMatrix input`).each((key, value) => {
+		value.addEventListener('paste', handlePaste);
+	});
+}
+
+function handlePaste(e) {
+    e.preventDefault();
+
+    const clipboardData = e.clipboardData || window.clipboardData;
+    const pastedData = clipboardData.getData('Text');
+
+    Papa.parse(pastedData, {
+        complete: function(results) {
+            fillFormFields(e.target, results.data[0]);
+        }
+    });
+}
+
+function fillFormFields(startInput, data) {
+	const inputs = $(startInput).parent().parent().find('input').toArray();
+	let index = inputs.indexOf(startInput);
+    data.forEach(cell => {
+		if (inputs[index]) {
+			inputs[index].value = cell;
+			index++;
+		}
+	});
 }
 
 function AddArrowButtonSupport(id)
@@ -940,6 +1040,117 @@ function OrderMatricData(matrixRows)
 		rowData[row.matrix_id].push(row);
 	});
 	return rowData;
+}
+
+function CopySchemaData()
+{
+	let rowArray = $('#schemaEditTable tr').toArray().map(value => {
+		let children = $(value).find('td')
+		return [children[0].innerHTML, children[1].innerHTML]
+	});
+	if (rowArray.length == 0)
+	{
+		alert('Nėra duomenų, kuriuos galima būtų nukopijuoti');
+		return;
+	}
+	$('#SchemaDataPasteButton').attr('disabled', false);
+	schemaDataBeingCopied = rowArray;
+}
+
+function PasteSchemaData()
+{
+	let amount = schemaDataBeingCopied.length;
+	schemaDataBeingCopied.forEach(row => {
+		API.CreateSchemaData(activeSchemaValue, row[0], row[1], () => {
+			amount--;
+			if (amount == 0)
+			{
+				ShowSchemaPage(schemasTypeId);
+				UpdateSchemaDataTable(activeSchemaValue, () => {
+					$('#newSchemaPlaceholder').removeClass('is-valid').val('');
+					$('#newSchemaData').removeClass('is-valid').val('');
+				});
+			}
+		});
+	});
+}
+
+function GenerateCoC()
+{
+	const typeId = $('#cocTypeSelect').val();
+	let placeholderData = [];
+
+	API.GetType(typeId, data => {
+		let typeData = data[0];
+		
+		let variant = '';
+		let version = '';
+		$('#cocVariantSelects .customSelect option:selected').toArray().forEach(c => variant += $(c).text())
+		$('#cocVersionSelects .customSelect option:selected').toArray().forEach(c => version += $(c).text())
+
+		placeholderData.push({ placeholder: 'typeNumber', data: typeData.type_code});
+		placeholderData.push({ placeholder: 'type', data: typeData.type_name})
+		placeholderData.push({ placeholder: 'variant', data: variant});
+		placeholderData.push({ placeholder: 'version', data: version})
+
+		customInputFields = $('#cocCustomFieldHolder input')
+		API.GetSchemaFields(typeId, data => {
+			for(var i = 0; i != data.length; i++)
+			{
+				placeholderData.push({ placeholder: data[i].field_placeholder, data: customInputFields[i].value})
+			}
+
+			let variantValues = $('#cocVariantSelects .customSelect').toArray().map(c => c.value);
+			let count = variantValues.length;
+			let left = count;
+			for (var i = 0; i != count; i++)
+			{
+				API.GetSchemaData(variantValues[i], data => {
+					data.forEach(row => {
+						placeholderData.push({ placeholder: row.placeholder, data: row.data})
+					});
+					left--;
+					if (left == 0)
+					{
+						Continue();
+					}
+				});
+			}
+
+			
+
+		})
+	})
+
+	function Continue()
+	{
+		let versionValues = $('#cocVersionSelects .customSelect').toArray().map(c => c.value);
+		let count = versionValues.length;
+		let left = count;
+		for (var i = 0; i != count; i++)
+		{
+			API.GetSchemaData(versionValues[i], data => {
+				data.forEach(row => {
+					placeholderData.push({ placeholder: row.placeholder, data: row.data})
+				});
+				left--;
+				if (left == 0)
+				{
+					ContinueFurther();
+				}
+			});
+		}
+	}
+
+	function ContinueFurther()
+	{
+		API.GenerateCoC(typeId, placeholderData, (response) => {
+			if (response.error == undefined)
+			{
+				window.open("/files/" + response.fileName, "_blank");
+			}
+		});
+	}
 }
 
 UpdateTypeTable();

@@ -331,4 +331,17 @@ class ApiController
 			error: (xhr, status) => console.log(xhr, status)
 		});
 	}
+
+	GenerateCoC(typeId, placeholderData, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/generateCoC/" + typeId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ placeholderData }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
 }

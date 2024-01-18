@@ -6,6 +6,7 @@
 		<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+		<script src="js/lib/papaparse.min.js"></script> 
 		<style>
 			.matrixInput {
 				background: #cdcdcd;
@@ -21,6 +22,17 @@
 			.matrixInputRow {
 				height: 18px;
 			}
+			.customSelect {
+				display: inline-block;
+				width: 84px;
+				margin-right: 6px;
+			}
+			#CoCFileWarning {
+				position: absolute;
+				left: 10px;
+				color: #ff1b00;
+				font-weight: bold;
+			}
 		</style>
 	</head>
 	<body style="background: #d6d6d6;">
@@ -29,7 +41,7 @@
 			  <img src="logo.png" class="d-inline-block align-top" style="width: 160px; margin-left: 10px;">
 			</a>
 			<form class="form-inline" style="margin-right: 26px;">
-				<button class="btn btn-sm btn-light" type="button" disabled>Generuoti CoC failą</button>
+				<button class="btn btn-sm btn-light" type="button" onClick="ShowGenerateCoCModal()">Generuoti CoC failą</button>
 				<button class="btn btn-sm btn-light" type="button" disabled>Generuoti CNIT failą</button>
 			</form>
 		  </nav>
@@ -51,8 +63,8 @@
 				<thead class="table-dark">
 					<tr>
 						<th scope="col">ID</th>
-						<th scope="col">Patvirtinimo numeris</th>
 						<th scope="col">Tipas</th>
+						<th scope="col">Patvirtinimo numeris</th>
 						<th scope="col">Variantas</th>
 						<th scope="col">Versija</th>
 						<th scope="col">CoC šablonas</th>
@@ -164,6 +176,46 @@
 									<td>Laukelio pavadinimas</td>
 									<td>Žymuo</td>
 									<td>Komandos</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<h4>Universalūs žymenys</h4>
+					</div>
+				</div>
+				<div class="row">
+					<div class="container">
+						<table class="table table-striped table-hover">
+							<thead class="table-dark">
+								<tr>
+									<th>žymuo</th>
+									<th>Duomenys</th>
+									<th>Pavyzdys</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>%%typeNumber%%</td>
+									<td>Tipo patvirtinimo numeris</td>
+									<td>e1*2007/46*1630*06</td>
+								</tr>
+								<tr>
+									<td>%%type%%</td>
+									<td>Tipas</td>
+									<td>906M2</td>
+								</tr>
+								<tr>
+									<td>%%variant%%</td>
+									<td>Kombinacijos varianto dalis</td>
+									<td>SYDD8DDAWAU2</td>
+								</tr>
+								<tr>
+									<td>%%version%%</td>
+									<td>Kombinacijos versijos dalis</td>
+									<td>NM500VSHA8DR001687MP0D2E0MAN</td>
 								</tr>
 							</tbody>
 						</table>
@@ -569,6 +621,8 @@
 							<input class="form-check-input" type="checkbox" id="schemaNessasaryCheckbox">
 							<label class="form-check-label" for="schemaNessasaryCheckbox">Duomenys nebūtini</label>
 						</div>
+						<button type="button" class="btn btn-warning btn-sm" id="SchemaDataPasteButton" disabled onClick="PasteSchemaData()">Įklijuoti</button>
+						<button type="button" class="btn btn-warning btn-sm" id="SchemaDataCopyButton" onClick="CopySchemaData()">Kopijuoti</button>
 						<div class="ms-auto">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
 						</div>
@@ -636,6 +690,54 @@
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
 						<button type="button" class="btn btn-primary" id="editSchemaFieldSubmit" onclick="EditSchemaField()">Redaguoti</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="cocGenerateModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5">CoC failo generavimas</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Atšaukti"></button>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-3">
+								<label>Pasirinkite tipą:</label>
+							</div>
+							<div class="col">
+								<select class="form-select" style="margin-bottom: 16px;" id="cocTypeSelect"></select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col">
+								<label for="basic-url" class="form-label">Papildomi reikalaujami laukeliai:</label>
+								<div id="cocCustomFieldHolder">
+									<div class="input-group mb-1">
+										<span class="input-group-text" id="basic-addon3">Vardas Pavardė</span>
+										<input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+									</div>
+									<div class="input-group mb-1">
+										<span class="input-group-text" id="basic-addon3">VIN kodas</span>
+										<input type="text" class="form-control" id="basic-url2" aria-describedby="basic-addon3">
+									</div>
+								</div>
+							</div>
+						</div>
+						<label style="margin-top: 10px;" for="basic-url" class="form-label">Variantas:</label>
+						<div style="width: 100%; overflow-x: auto; padding-bottom: 6px;">
+							<div id="cocVariantSelects"></div>
+						</div>
+						<label style="margin-top: 10px;" for="basic-url" class="form-label">Versija:</label>
+						<div style="width: 100%; overflow-x: auto; padding-bottom: 6px;">
+							<div id="cocVersionSelects"></div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<div id="CoCFileWarning">Klaida: Tipas neturi priskirto CoC šablono failo!</div>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+						<button type="button" class="btn btn-primary" id="cocGenerateButton" onclick="GenerateCoC()">Generuoti</button>
 					</div>
 				</div>
 			</div>
