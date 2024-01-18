@@ -142,8 +142,8 @@ function UpdateTypeTable()
 		response.forEach(row => {
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = typeIndex;
-			tr.appendChild(document.createElement("td")).innerText = row.type_code;
 			tr.appendChild(document.createElement("td")).innerText = row.type_name;
+			tr.appendChild(document.createElement("td")).innerText = row.type_code;
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			let fileLink = document.createElement('a');
