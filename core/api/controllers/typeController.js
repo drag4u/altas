@@ -15,11 +15,11 @@ module.exports = (logger, database, utils) => {
 				query += `, coc_file`;
 			if (cnitFileName)
 				query += `, cnit_file`;
-			query += `) VALUES ('${name}', '${code}', ${versionColumns}, ${versionRows}, ${variantColumns}, ${variantRows}`;
+			query += `) VALUES ('${utils.Esc(name)}', '${utils.Esc(code)}', ${utils.Esc(versionColumns)}, ${utils.Esc(versionRows)}, ${utils.Esc(variantColumns)}, ${utils.Esc(variantRows)}`;
 			if (cocFileName)
-				query += `, ${cocFileName}`;
+				query += `, ${utils.Esc(cocFileName)}`;
 			if (cnitFileName)
-				query += `, ${cnitFileName}`;
+				query += `, ${utils.Esc(cnitFileName)}`;
 			query += `)`;
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
@@ -29,22 +29,22 @@ module.exports = (logger, database, utils) => {
 			const cocFileName = req.files.editCocFile ? `'${req.files.editCocFile[0].filename}'` : null;
 			const cnitFileName = req.files.editCNITFile ? `'${req.files.editCNITFile[0].filename}'` : null;
 			
-			let query = `UPDATE type SET type_name = '${name}', type_code = '${code}'`;
+			let query = `UPDATE type SET type_name = '${utils.Esc(name)}', type_code = '${utils.Esc(code)}'`;
 			if (cocFileName)
-				query += `, coc_file = ${cocFileName}`;
+				query += `, coc_file = ${utils.Esc(cocFileName)}`;
 			if (cnitFileName)
-				query += `, cnit_file = ${cnitFileName}`;
-			query += ` WHERE type_id = ${req.params.id}`;
+				query += `, cnit_file = ${utils.Esc(cnitFileName)}`;
+			query += ` WHERE type_id = ${utils.Esc(req.params.id)}`;
 
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully updated'}));
         },
 		copyType: async (req, res) => {
 			const {id} = req.params;
-			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {
+			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${utils.Esc(id)}`, rows => {
 				let type = rows[0];
-				let query = `INSERT INTO type (type_name, type_code, version_columns, version_rows, variant_columns, variant_rows, coc_file, cnit_file) VALUES ('${type.type_name}', '${type.type_code}', ${type.version_columns}, ${type.version_rows}, ${type.variant_columns}, ${type.variant_rows}`;
-				query += type.coc_file == null ? `, null` : `, '${type.coc_file}'`;
-				query += type.cnit_file == null ? `, null` : `, '${type.cnit_file}'`;
+				let query = `INSERT INTO type (type_name, type_code, version_columns, version_rows, variant_columns, variant_rows, coc_file, cnit_file) VALUES ('${utils.Esc(type.type_name)}', '${utils.Esc(type.type_code)}', ${utils.Esc(type.version_columns)}, ${utils.Esc(type.version_rows)}, ${utils.Esc(type.variant_columns)}, ${utils.Esc(type.variant_rows)}`;
+				query += type.coc_file == null ? `, null` : `, '${utils.Esc(type.coc_file)}'`;
+				query += type.cnit_file == null ? `, null` : `, '${utils.Esc(type.cnit_file)}'`;
 				query += `);`;
 
 				utils.ExecuteAction(res, query, () => {
@@ -53,14 +53,14 @@ module.exports = (logger, database, utils) => {
 						const newTypeId = newTypeRows[0].id;
 						console.log(newTypeId);
 
-						let schemaFieldQuery = 'SELECT * FROM schema_fields WHERE type_id = ' + id;
+						let schemaFieldQuery = 'SELECT * FROM schema_fields WHERE type_id = ' + utils.Esc(id);
 						utils.ExecuteAction(res, schemaFieldQuery, schemaFieldRows => {
 							if (schemaFieldRows.length == 0) {
 								Continue();
 							} else {
 								let newSchemaFieldQuery = 'INSERT INTO schema_fields (type_id, field_name, field_placeholder) VALUES ';
 								schemaFieldRows.forEach(row => {
-									newSchemaFieldQuery += `(${newTypeId}, '${row.field_name}', '${row.field_placeholder}'), `;
+									newSchemaFieldQuery += `(${utils.Esc(newTypeId)}, '${utils.Esc(row.field_name)}', '${utils.Esc(row.field_placeholder)}'), `;
 								});
 								newSchemaFieldQuery = newSchemaFieldQuery.slice(0, -2);
 								newSchemaFieldQuery += ';';
@@ -72,7 +72,7 @@ module.exports = (logger, database, utils) => {
 
 						function Continue()
 						{
-							let matricesQuery = `SELECT * FROM matrix WHERE type_id = ${id}`;
+							let matricesQuery = `SELECT * FROM matrix WHERE type_id = ${utils.Esc(id)}`;
 							utils.ExecuteAction(res, matricesQuery, existingTypeMatrices => {
 								// get all matrix values for these matrices
 								let matrixIds = '';
@@ -82,7 +82,7 @@ module.exports = (logger, database, utils) => {
 									oldMatrixIdsArray.push(row.matrix_id);
 								});
 								matrixIds = matrixIds.slice(0, -1);
-								let matrixValuesQuery = `SELECT * FROM matrix_value WHERE matrix_id IN (${matrixIds})`;
+								let matrixValuesQuery = `SELECT * FROM matrix_value WHERE matrix_id IN (${utils.Esc(matrixIds)})`;
 								/////////////////////////
 								utils.ExecuteAction(res, matrixValuesQuery, currentMatrixValuesRows => {
 									// insert new matrices for new type
@@ -91,14 +91,14 @@ module.exports = (logger, database, utils) => {
 										res.status(200).json({info: 'successfully copied'});
 									} else {
 										existingTypeMatrices.forEach(row => {
-											newMatricesQuery += `(${newTypeId}), `;
+											newMatricesQuery += `(${utils.Esc(newTypeId)}), `;
 										});
 										newMatricesQuery = newMatricesQuery.slice(0, -2);
 										newMatricesQuery += ';';
 										// INSERT INTO matrix (type_id) VALUES (14), (14), (14);
 										utils.ExecuteAction(res, newMatricesQuery, () => {
 											// get new matrix ids for new matrices
-											let newMatrixIdsQuery = `SELECT * FROM matrix WHERE type_id = ${newTypeId}`;
+											let newMatrixIdsQuery = `SELECT * FROM matrix WHERE type_id = ${utils.Esc(newTypeId)}`;
 											utils.ExecuteAction(res, newMatrixIdsQuery, newMatrixIdsRows => {
 												let newMatrixIds = '';
 												let newMatrixIdsArray = [];
@@ -115,13 +115,13 @@ module.exports = (logger, database, utils) => {
 												let newMatrixValuesQuery = 'INSERT INTO matrix_value (matrix_id, version_variant, row, column, value) VALUES ';
 												
 												currentMatrixValuesRows.forEach(row => {
-													newMatrixValuesQuery += `(${row.matrix_id}, ${row.version_variant}, ${row.row}, ${row.column}, '${row.value}'), `;
+													newMatrixValuesQuery += `(${utils.Esc(row.matrix_id)}, ${utils.Esc(row.version_variant)}, ${utils.Esc(row.row)}, ${utils.Esc(row.column)}, '${utils.Esc(row.value)}'), `;
 												});
 												newMatrixValuesQuery = newMatrixValuesQuery.slice(0, -2);
 												newMatrixValuesQuery += ';';
 												utils.ExecuteAction(res, newMatrixValuesQuery, () => {
 													// select old type schema values
-													let schemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${id}`;
+													let schemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${utils.Esc(id)}`;
 													utils.ExecuteAction(res, schemaValuesQuery, schemaValuesRows => {
 														let oldSchemaValueIdArray = [];
 														schemaValuesRows.forEach(row => {
@@ -131,13 +131,13 @@ module.exports = (logger, database, utils) => {
 														// insert new type schema values
 														let newSchemaValuesQuery = 'INSERT INTO schema_values (type_id, version_variant, column, unique_matrix_value, necessary) VALUES ';
 														schemaValuesRows.forEach(row => {
-															newSchemaValuesQuery += `(${row.type_id}, ${row.version_variant}, ${row.column}, '${row.unique_matrix_value}', ${row.necessary}), `;
+															newSchemaValuesQuery += `(${utils.Esc(row.type_id)}, ${utils.Esc(row.version_variant)}, ${utils.Esc(row.column)}, '${utils.Esc(row.unique_matrix_value)}', ${utils.Esc(row.necessary)}), `;
 														});
 														newSchemaValuesQuery = newSchemaValuesQuery.slice(0, -2);
 														newSchemaValuesQuery += ';';
 														utils.ExecuteAction(res, newSchemaValuesQuery, () => {
 															// select new schema values with newTypeId
-															let newSchemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${newTypeId}`;
+															let newSchemaValuesQuery = `SELECT * FROM schema_values WHERE type_id = ${utils.Esc(newTypeId)}`;
 															utils.ExecuteAction(res, newSchemaValuesQuery, newSchemaValuesRows => {
 																let newSchemaValueIdArray = [];
 																newSchemaValuesRows.forEach(row => {
@@ -145,7 +145,7 @@ module.exports = (logger, database, utils) => {
 																});
 		
 																// select old schema data from oldSchemaValueIdArray
-																let schemaDataQuery = `SELECT * FROM schema_data WHERE schema_value_id IN (${oldSchemaValueIdArray})`;
+																let schemaDataQuery = `SELECT * FROM schema_data WHERE schema_value_id IN (${utils.Esc(oldSchemaValueIdArray)})`;
 																utils.ExecuteAction(res, schemaDataQuery, schemaDataRows => {
 																	schemaDataRows.forEach(row => {
 																		row.schema_value_id = newSchemaValueIdArray[oldSchemaValueIdArray.indexOf(row.schema_value_id)];
@@ -156,7 +156,7 @@ module.exports = (logger, database, utils) => {
 																		res.status(200).json({info: 'successfully copied'});
 																	} else {
 																		schemaDataRows.forEach(row => {
-																			newSchemaDataQuery += `(${row.schema_value_id}, '${row.placeholder}', '${row.data}'), `;
+																			newSchemaDataQuery += `(${utils.Esc(row.schema_value_id)}, '${utils.Esc(row.placeholder)}', '${utils.Esc(row.data)}'), `;
 																		});
 																		newSchemaDataQuery = newSchemaDataQuery.slice(0, -2);
 																		newSchemaDataQuery += ';';
@@ -180,24 +180,24 @@ module.exports = (logger, database, utils) => {
 			});
 		},
 		removeCoCFile: async (req, res) => {
-			let query = `UPDATE type SET coc_file = null WHERE type_id = ${req.params.id}`;
+			let query = `UPDATE type SET coc_file = null WHERE type_id = ${utils.Esc(req.params.id)}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CoC file'}));
 		},
 		removeCNITFile: async (req, res) => {
-			let query = `UPDATE type SET cnit_file = null WHERE type_id = ${req.params.id}`;
+			let query = `UPDATE type SET cnit_file = null WHERE type_id = ${utils.Esc(req.params.id)}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully removed CNIT file'}));
 		},
 		fetchType: async (req, res) => {
 			const {id} = req.params;
-			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${id}`, rows => {
+			utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${utils.Esc(id)}`, rows => {
 				res.status(200).json(rows);
 			});
 		},
 		updateType: async (req, res) => {
 			const {id, name, versionColumns, versionRows, variantColumns, variantRows, coc_file, cnit_file} = req.body;
-			var query = `UPDATE type SET type_name = '${name}', version_columns = ${versionColumns},  version_rows = ${versionRows}, 
-				variant_columns = ${variantColumns}, variant_rows = ${variantRows}, ${coc_file ? `coc_file = '${coc_file}'` : ''}, ${cnit_file ? `cnit_file = '${cnit_file}'` : ''}
-				WHERE type_id = ${id}
+			var query = `UPDATE type SET type_name = '${utils.Esc(name)}', version_columns = ${utils.Esc(versionColumns)},  version_rows = ${utils.Esc(versionRows)}, 
+				variant_columns = ${utils.Esc(variantColumns)}, variant_rows = ${utils.Esc(variantRows)}, ${coc_file ? `coc_file = '${utils.Esc(coc_file)}'` : ''}, ${cnit_file ? `cnit_file = '${utils.Esc(cnit_file)}'` : ''}
+				WHERE type_id = ${utils.Esc(id)}
 			`;
 			utils.ExecuteAction(res, query, () => {
 				res.status(200).json({info: 'successfully updated'});
@@ -206,15 +206,15 @@ module.exports = (logger, database, utils) => {
 		deleteType: async (req, res) => {
 			const {id} = req.params;
 
-			utils.ExecuteAction(res, `DELETE FROM type WHERE type_id = ${id}`, () => {
-				utils.ExecuteAction(res, `SELECT * from matrix where type_id = ${id}`, rows => {
-					utils.ExecuteAction(res, `DELETE from matrix where type_id = ${id}`, () => {
+			utils.ExecuteAction(res, `DELETE FROM type WHERE type_id = ${utils.Esc(id)}`, () => {
+				utils.ExecuteAction(res, `SELECT * from matrix where type_id = ${utils.Esc(id)}`, rows => {
+					utils.ExecuteAction(res, `DELETE from matrix where type_id = ${utils.Esc(id)}`, () => {
 						if (rows.length == 0) {
 							res.status(200).json({info: 'successfully deleted'});
 						} else {
 							let query = `DELETE FROM matrix_value WHERE matrix_id IN (`;
 							rows.forEach(row => {
-								query += `${row.matrix_id},`;
+								query += `${utils.Esc(row.matrix_id)},`;
 							});
 							query = query.slice(0, -1);
 							query += `);`;
@@ -230,15 +230,15 @@ module.exports = (logger, database, utils) => {
 		removeColumn: async (req, res) => {
 			const {typeId, versionVariant, columnId} = req.params;
 
-			let deleteQuery = `DELETE FROM matrix_value WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND column = ${columnId};`;
-			let updateQuery = `UPDATE matrix_value SET column = column - 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND column > ${columnId};`;
-			let typeUpdateQuery = `UPDATE type SET version_columns = version_columns - 1 WHERE type_id = ${typeId};`;
+			let deleteQuery = `DELETE FROM matrix_value WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND column = ${utils.Esc(columnId)};`;
+			let updateQuery = `UPDATE matrix_value SET column = column - 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND column > ${utils.Esc(columnId)};`;
+			let typeUpdateQuery = `UPDATE type SET version_columns = version_columns - 1 WHERE type_id = ${utils.Esc(typeId)};`;
 			if (versionVariant == 1) {
-				typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns - 1 WHERE type_id = ${typeId};`;
+				typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns - 1 WHERE type_id = ${utils.Esc(typeId)};`;
 			}
 
-			let schemaDeleteQuery = `DELETE FROM schema_values WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column = ${columnId};`;
-			let schemaUpdateQuery = `UPDATE schema_values SET column = column - 1 WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column > ${columnId};`;
+			let schemaDeleteQuery = `DELETE FROM schema_values WHERE type_id = ${utils.Esc(typeId)} AND version_variant = ${utils.Esc(versionVariant)} AND column = ${utils.Esc(columnId)};`;
+			let schemaUpdateQuery = `UPDATE schema_values SET column = column - 1 WHERE type_id = ${utils.Esc(typeId)} AND version_variant = ${utils.Esc(versionVariant)} AND column > ${utils.Esc(columnId)};`;
 			
 			utils.ExecuteAction(res, typeUpdateQuery, () => {
 				utils.ExecuteAction(res, deleteQuery, () => {
@@ -256,7 +256,7 @@ module.exports = (logger, database, utils) => {
 			const { typeId, versionVariant, columnId } = req.params;
 		
 			// Shift subsequent columns to the right
-			let updateQuery = `UPDATE matrix_value SET column = column + 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND column >= ${columnId};`;
+			let updateQuery = `UPDATE matrix_value SET column = column + 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND column >= ${utils.Esc(columnId)};`;
 		
 			// Insert new column values. Assuming 'defaultValue' is the value you want to insert for the new column.
 			let defaultValue = '';
@@ -265,8 +265,8 @@ module.exports = (logger, database, utils) => {
 			let getMaxColumnIndexQuery = `
 				SELECT matrix_id, MAX(column) as max_column
 				FROM matrix_value
-				WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId})
-				AND version_variant = ${versionVariant}
+				WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)})
+				AND version_variant = ${utils.Esc(versionVariant)}
 				GROUP BY matrix_id;
 			`;
 
@@ -277,31 +277,31 @@ module.exports = (logger, database, utils) => {
 						// Inserting at the end
 						return `
 							INSERT INTO matrix_value (matrix_id, version_variant, row, column, value)
-							SELECT ${matrix_id}, ${versionVariant}, row, ${columnId}, '${defaultValue}'
+							SELECT ${utils.Esc(matrix_id)}, ${utils.Esc(versionVariant)}, row, ${utils.Esc(columnId)}, '${utils.Esc(defaultValue)}'
 							FROM matrix_value
-							WHERE matrix_id = ${matrix_id} AND version_variant = ${versionVariant}
+							WHERE matrix_id = ${utils.Esc(matrix_id)} AND version_variant = ${utils.Esc(versionVariant)}
 							GROUP BY row;
 						`;
 					} else {
 						// Inserting in between existing columns
 						return `
 							INSERT INTO matrix_value (matrix_id, version_variant, row, column, value)
-							SELECT ${matrix_id}, ${versionVariant}, row, ${columnId}, '${defaultValue}'
+							SELECT ${utils.Esc(matrix_id)}, ${utils.Esc(versionVariant)}, row, ${utils.Esc(columnId)}, '${utils.Esc(defaultValue)}'
 							FROM matrix_value
-							WHERE matrix_id = ${matrix_id} AND version_variant = ${versionVariant} AND column >= ${columnId}
+							WHERE matrix_id = ${utils.Esc(matrix_id)} AND version_variant = ${utils.Esc(versionVariant)} AND column >= ${utils.Esc(columnId)}
 							GROUP BY row;
 						`;
 					}
 				});
 			
 				// Update the type table
-				let typeUpdateQuery = `UPDATE type SET version_columns = version_columns + 1 WHERE type_id = ${typeId};`;
+				let typeUpdateQuery = `UPDATE type SET version_columns = version_columns + 1 WHERE type_id = ${utils.Esc(typeId)};`;
 				if (versionVariant == 1) {
-					typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns + 1 WHERE type_id = ${typeId};`;
+					typeUpdateQuery = `UPDATE type SET variant_columns = variant_columns + 1 WHERE type_id = ${utils.Esc(typeId)};`;
 				}
 				
 				// Shift subsequent columns to the right
-				let schemaUpdateQuery = `UPDATE schema_values SET column = column + 1 WHERE type_id = ${typeId} AND version_variant = ${versionVariant} AND column >= ${columnId};`;
+				let schemaUpdateQuery = `UPDATE schema_values SET column = column + 1 WHERE type_id = ${utils.Esc(typeId)} AND version_variant = ${utils.Esc(versionVariant)} AND column >= ${utils.Esc(columnId)};`;
 		
 				// Execute the queries
 				utils.ExecuteAction(res, schemaUpdateQuery, () => {
@@ -323,11 +323,11 @@ module.exports = (logger, database, utils) => {
 		removeRow: async (req, res) => {
 			const {typeId, versionVariant, rowId} = req.params;
 
-			let deleteQuery = `DELETE FROM matrix_value WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND row = ${rowId};`;
-			let updateQuery = `UPDATE matrix_value SET row = row - 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND row > ${rowId};`;
-			let typeUpdateQuery = `UPDATE type SET version_rows = version_rows - 1 WHERE type_id = ${typeId};`;
+			let deleteQuery = `DELETE FROM matrix_value WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND row = ${utils.Esc(rowId)};`;
+			let updateQuery = `UPDATE matrix_value SET row = row - 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND row > ${utils.Esc(rowId)};`;
+			let typeUpdateQuery = `UPDATE type SET version_rows = version_rows - 1 WHERE type_id = ${utils.Esc(typeId)};`;
 			if (versionVariant == 1) {
-				typeUpdateQuery = `UPDATE type SET variant_rows = variant_rows - 1 WHERE type_id = ${typeId};`;
+				typeUpdateQuery = `UPDATE type SET variant_rows = variant_rows - 1 WHERE type_id = ${utils.Esc(typeId)};`;
 			}
 
 			utils.ExecuteAction(res, typeUpdateQuery, () => {
@@ -342,7 +342,7 @@ module.exports = (logger, database, utils) => {
 			const { typeId, versionVariant, rowId } = req.params;
 		
 			// Shift subsequent rows down
-			let updateQuery = `UPDATE matrix_value SET row = row + 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId}) AND version_variant = ${versionVariant} AND row >= ${rowId};`;
+			let updateQuery = `UPDATE matrix_value SET row = row + 1 WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND row >= ${utils.Esc(rowId)};`;
 		
 			// Insert new row values. Assuming 'defaultValue' is the value you want to insert for each column in the new row.
 			let defaultValue = '';
@@ -351,8 +351,8 @@ module.exports = (logger, database, utils) => {
 			let getMaxRowIndexQuery = `
 				SELECT matrix_id, MAX(row) as max_row
 				FROM matrix_value
-				WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${typeId})
-				AND version_variant = ${versionVariant}
+				WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)})
+				AND version_variant = ${utils.Esc(versionVariant)}
 				GROUP BY matrix_id;
 			`;
 
@@ -363,38 +363,38 @@ module.exports = (logger, database, utils) => {
 						// Inserting at the beginning
 						return `
 							INSERT INTO matrix_value (matrix_id, version_variant, row, column, value)
-							SELECT ${matrix_id}, ${versionVariant}, ${rowId}, column, '${defaultValue}'
+							SELECT ${utils.Esc(matrix_id)}, ${utils.Esc(versionVariant)}, ${utils.Esc(rowId)}, column, '${utils.Esc(defaultValue)}'
 							FROM (
 								SELECT DISTINCT column
 								FROM matrix_value
-								WHERE matrix_id = ${matrix_id} AND version_variant = ${versionVariant}
+								WHERE matrix_id = ${utils.Esc(matrix_id)} AND version_variant = ${utils.Esc(versionVariant)}
 							);
 						`;
 					} else if (max_row < rowId) {
 						// Inserting at the end
 						return `
 							INSERT INTO matrix_value (matrix_id, version_variant, row, column, value)
-							SELECT ${matrix_id}, ${versionVariant}, ${rowId}, column, '${defaultValue}'
+							SELECT ${utils.Esc(matrix_id)}, ${utils.Esc(versionVariant)}, ${utils.Esc(rowId)}, column, '${utils.Esc(defaultValue)}'
 							FROM matrix_value
-							WHERE matrix_id = ${matrix_id} AND version_variant = ${versionVariant}
+							WHERE matrix_id = ${utils.Esc(matrix_id)} AND version_variant = ${utils.Esc(versionVariant)}
 							GROUP BY column;
 						`;
 					} else {
 						// Inserting in between existing rows
 						return `
 							INSERT INTO matrix_value (matrix_id, version_variant, row, column, value)
-							SELECT ${matrix_id}, ${versionVariant}, ${rowId}, column, '${defaultValue}'
+							SELECT ${utils.Esc(matrix_id)}, ${utils.Esc(versionVariant)}, ${utils.Esc(rowId)}, column, '${utils.Esc(defaultValue)}'
 							FROM matrix_value
-							WHERE matrix_id = ${matrix_id} AND version_variant = ${versionVariant} AND row >= ${rowId}
+							WHERE matrix_id = ${utils.Esc(matrix_id)} AND version_variant = ${utils.Esc(versionVariant)} AND row >= ${utils.Esc(rowId)}
 							GROUP BY column;
 						`;
 					}
 				});
 			
 				// Update the type table
-				let typeUpdateQuery = `UPDATE type SET version_rows = version_rows + 1 WHERE type_id = ${typeId};`;
+				let typeUpdateQuery = `UPDATE type SET version_rows = version_rows + 1 WHERE type_id = ${utils.Esc(typeId)};`;
 				if (versionVariant == 1) {
-					typeUpdateQuery = `UPDATE type SET variant_rows = variant_rows + 1 WHERE type_id = ${typeId};`;
+					typeUpdateQuery = `UPDATE type SET variant_rows = variant_rows + 1 WHERE type_id = ${utils.Esc(typeId)};`;
 				}
 			
 				// Execute the queries

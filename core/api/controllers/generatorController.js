@@ -8,7 +8,7 @@ module.exports = (logger, database, utils) => {
     return {
         GenerateCoC: async (req, res) => {
             const { typeId } = req.params;
-            utils.ExecuteAction(res, `SELECT coc_file FROM type where type_id = ${typeId}`, async rows => {
+            utils.ExecuteAction(res, `SELECT coc_file FROM type where type_id = ${utils.Esc(typeId)}`, async rows => {
                 const cocFile = rows[0].coc_file;
                 const filePath = path.join('./data/files', cocFile);
 

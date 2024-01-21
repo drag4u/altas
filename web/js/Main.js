@@ -142,8 +142,8 @@ function UpdateTypeTable()
 		response.forEach(row => {
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = typeIndex;
-			tr.appendChild(document.createElement("td")).innerText = row.type_name;
-			tr.appendChild(document.createElement("td")).innerText = row.type_code;
+			tr.appendChild(document.createElement("td")).innerText = escapeHtml(row.type_name);
+			tr.appendChild(document.createElement("td")).innerText = escapeHtml(row.type_code);
 			tr.appendChild(document.createElement("td")).innerText = `${row.variant_columns}st. ${row.variant_rows}eil.`;
 			tr.appendChild(document.createElement("td")).innerText = `${row.version_columns}st. ${row.version_rows}eil.`;
 			let fileLink = document.createElement('a');
@@ -301,8 +301,8 @@ function UpdateSchemaDataTable(schemaId, callback)
 		Object.keys(response).forEach( dataId => {
 			const tr = document.createElement("tr");
 			$(tr).attr("data-value-id", response[dataId].schema_data_id);
-			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].placeholder;
-			tr.appendChild(document.createElement("td")).innerHTML = response[dataId].data;
+			tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(response[dataId].placeholder);
+			tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(response[dataId].data);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
 					<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaData(${response[dataId].schema_data_id})">Redaguoti</button>
@@ -325,6 +325,17 @@ function DeleteSchemaData(dataId)
 
 }
 
+function escapeHtml(unsafe)
+{
+	const str = typeof unsafe === 'string' ? unsafe : unsafe.toString();
+    return str
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 function EditSchemaData(dataId)
 {
 	if (schemaDataIdBeingEdited != null)
@@ -339,12 +350,12 @@ function EditSchemaData(dataId)
 	const button2 = $(tds[2]).find('button')[1];
 	tds[0].innerHTML = `
 		<div class="form-floating">
-			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaPlaceholder" value="${placeholder}" required>
+			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaPlaceholder" value="${escapeHtml(placeholder)}" required>
 		</div>
 	`;
 	tds[1].innerHTML = `
 		<div class="form-floating">
-			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaData" value="${data}" required>
+			<input type="text" style="height: 30px; min-height: 38px; padding: 0px 0px 0px 10px;" class="form-control form-control-sm" id="editSchemaData" value="${escapeHtml(data)}" required>
 		</div>
 	`;
 	button1.innerText = 'Išsaugoti';
@@ -544,8 +555,8 @@ function ShowSchemaPage(typeId) {
 		Object.keys(response).forEach( fieldId => {
 			const tr = document.createElement("tr");
 			$(tr).attr("schema-field-data-id", response[fieldId].schema_field_id);
-			tr.appendChild(document.createElement("td")).innerHTML = response[fieldId].field_name;
-			tr.appendChild(document.createElement("td")).innerHTML = response[fieldId].field_placeholder;
+			tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(response[fieldId].field_name);
+			tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(response[fieldId].field_placeholder);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<button type="button" class="btn btn-sm btn-warning" onClick="ShowSchemaFieldEditModal(${response[fieldId].schema_field_id})">Redaguoti</button>
 				<button type="button" class="btn btn-sm btn-danger" onClick="ShowSchemaFieldDeleteModal(this, ${response[fieldId].schema_field_id})">Ištrinti</button>
@@ -608,7 +619,7 @@ function UpdateMatrixTable(typeId)
 		Object.keys(rowData).forEach( matrixId => {
 			const tr = document.createElement("tr");
 			tr.appendChild(document.createElement("td")).innerText = matrixIndex;
-			tr.appendChild(document.createElement("td")).innerText = activeTypeData[0].type_name;
+			tr.appendChild(document.createElement("td")).innerText = escapeHtml(activeTypeData[0].type_name);
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 1);
 			tr.appendChild(document.createElement("td")).innerHTML = CreateMatrixDivTable(rowData[matrixId], 0);
 			tr.appendChild(document.createElement("td")).innerText = GetCombinations(rowData[matrixId]);
@@ -673,7 +684,7 @@ function ShowGenerateCoCModal()
 	API.GetAllTypes(response => {
 		$('#cocTypeSelect').html('');
 		response.forEach(type => {
-			$('#cocTypeSelect').append(`<option value="${type.type_id}">${type.type_name}</option>`);
+			$('#cocTypeSelect').append(`<option value="${escapeHtml(type.type_id)}">${escapeHtml(type.type_name)}</option>`);
 		});
 		$('#cocTypeSelect').off('change').on('change', function() {
 			API.GetSchemaFields(this.value, fields => {
@@ -682,7 +693,7 @@ function ShowGenerateCoCModal()
 				fields.forEach(field => {
 					$('#cocCustomFieldHolder').append(`
 						<div class="input-group mb-1">
-							<span class="input-group-text" id="customFieldAddon${index}">${field.field_name}</span>
+							<span class="input-group-text" id="customFieldAddon${index}">${escapeHtml(field.field_name)}</span>
 							<input type="text" class="form-control" id="customField${index}" aria-describedby="customFieldAddon${index}">
 						</div>
 					`);
@@ -704,7 +715,7 @@ function ShowGenerateCoCModal()
 						let selectElement = document.createElement('select');
 						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
 						response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
-							$(selectElement).append(`<option value="${row.schema_value_id}">${row.unique_matrix_value}</option>`);
+							$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
 						});
 						$('#cocVersionSelects').append(selectElement);
 					}
@@ -715,7 +726,7 @@ function ShowGenerateCoCModal()
 						let selectElement = document.createElement('select');
 						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantnSelect' + i);
 						response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
-							$(selectElement).append(`<option value="${row.schema_value_id}">${row.unique_matrix_value}</option>`);
+							$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
 						});
 						$('#cocVariantSelects').append(selectElement);
 					}

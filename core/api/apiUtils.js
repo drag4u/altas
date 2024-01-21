@@ -5,6 +5,13 @@ class ApiUtils
 		this.logger = logger;
 		this.database = database;
 	}
+	
+	Esc(input) {
+		const str = typeof input === 'string' ? input : input.toString();
+		return str
+			.replace(/\\/g, "\\\\") // Escapes backslashes
+			.replace(/'/g, "''");
+	}
 
 	ExecuteAction(res, query, successCallback)
 	{
@@ -22,22 +29,22 @@ class ApiUtils
 
 	UpdateTypeSchema(res, typeId, callback)
 	{
-		this.ExecuteAction(res, `SELECT * FROM schema_values WHERE type_id = ${typeId}`, schema_rows => {
+		this.ExecuteAction(res, `SELECT * FROM schema_values WHERE type_id = ${this.Esc(typeId)}`, schema_rows => {
 			console.log("SCHEMA ROWS: ", schema_rows);
-			this.ExecuteAction(res, `SELECT * from matrix where type_id = ${typeId}`, matrix_rows => {
+			this.ExecuteAction(res, `SELECT * from matrix where type_id = ${this.Esc(typeId)}`, matrix_rows => {
 				if (matrix_rows.length == 0) {
-					this.ExecuteAction(res, `delete from schema_values where type_id = ${typeId}`, () => {
+					this.ExecuteAction(res, `delete from schema_values where type_id = ${this.Esc(typeId)}`, () => {
 						callback();
 					});
 				} else {
 					let query = `SELECT * FROM matrix_value WHERE matrix_id IN (`;
 					matrix_rows.forEach(row => {
-						query += `${row.matrix_id},`;
+						query += `${this.Esc(row.matrix_id)},`;
 					});
 					query = query.slice(0, -1);
 					query += `);`;
 					this.ExecuteAction(res, query, value_rows => {
-						this.ExecuteAction(res, `SELECT * FROM type where type_id = ${typeId}`, typeData => {
+						this.ExecuteAction(res, `SELECT * FROM type where type_id = ${this.Esc(typeId)}`, typeData => {
 							let originalSchemaData = this.PrepareSchemaData(value_rows, typeData);
 							let schemaData = this.RemoveAlreadyExisting(originalSchemaData, schema_rows);
 							console.log("schema data: ", schemaData);
@@ -48,14 +55,14 @@ class ApiUtils
 								for (let j = 0; j < schemaData.versionMatrix[i].length; j++) {
 									atLeastOneRowExists = true;
 									const dataRow = schemaData.versionMatrix[i];
-									query += `(${typeId}, 0, ${i}, "${dataRow[j]}", 1),`;
+									query += `(${this.Esc(typeId)}, 0, ${this.Esc(i)}, "${this.Esc(dataRow[j])}", 1),`;
 								}
 							}
 							for (let i = 0; i < schemaData.variantMatrix.length; i++) {
 								for (let j = 0; j < schemaData.variantMatrix[i].length; j++) {
 									atLeastOneRowExists = true;
 									const dataRow = schemaData.variantMatrix[i];
-									query += `(${typeId}, 1, ${i}, "${dataRow[j]}", 1),`;
+									query += `(${this.Esc(typeId)}, 1, ${this.Esc(i)}, "${this.Esc(dataRow[j])}", 1),`;
 								}
 							}
 							query = query.slice(0, -1);
@@ -71,7 +78,7 @@ class ApiUtils
 								}
 								let deleteQuery = 'DELETE FROM schema_values WHERE schema_value_id IN (';
 								toDelete.forEach(id => {
-									deleteQuery += `${id},`;
+									deleteQuery += `${this.Esc(id)},`;
 								});
 								deleteQuery = deleteQuery.slice(0, -1);
 								deleteQuery += `);`;
