@@ -774,6 +774,7 @@ function UpdateCombinationTable()
 				tr.appendChild(document.createElement("td")).innerHTML = `
 					<div class="btn-group" role="group">
 						<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaCombinationData(${data.schema_combination_data_id})">Redaguoti</button>
+						<button type="button" class="btn btn-sm btn-warning" onClick="CopySchemaCombinationData(${data.schema_combination_data_id})" disabled>Kopijuoti</button>
 						<button type="button" class="btn btn-sm btn-danger" onClick="DeleteSchemaCombinationData(${data.schema_combination_data_id})">Ištrinti</button>
 					</div>
 				`;
