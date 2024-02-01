@@ -26,6 +26,7 @@ class API{
 		this.app = express();
 		this.app.use(express.static('web'));
 		this.app.use(express.json());
+		
 		this.typeController = require('./controllers/typeController')(logger, database, this.utils );
 		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
@@ -62,9 +63,15 @@ class API{
 		this.app.get('/schema/:typeId', this.schemaController.getSchema);
 		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData);
 		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData);
+		this.app.post('/schema/createCombination/:typeId', this.schemaController.createCombination);
+		this.app.post('/schema/createCombinationData/:combinationId', this.schemaController.createCombinationData);
+		this.app.get('/schema/combinationData/:combinationDataId', this.schemaController.getCombinationData);
+		this.app.post('/schema/combinationData/:combinationDataId', this.schemaController.editCombinationData);
+		this.app.post('/schema/getCombinations/:typeId', this.schemaController.getCombinations);
 		this.app.post('/schema/edit/:dataId', this.schemaController.editSchemaData);
 		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity);
 		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
+		this.app.delete('/schema/deleteCombinationData/:combinationDataId', this.schemaController.deleteCombinationData);
 		this.app.post('/schema/createField/:typeId', this.schemaController.createField);
 		this.app.get('/schema/fields/:fieldId', this.schemaController.getFields);
 		this.app.get('/schema/field/:fieldId', this.schemaController.getField);

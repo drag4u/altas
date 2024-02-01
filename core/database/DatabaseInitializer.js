@@ -82,6 +82,21 @@ class DatabaseInitializer {
 				field_name text not null,
 				field_placeholder text not null
 			);
+			create table schema_combination (
+				schema_combination_id integer primary key AUTOINCREMENT,
+				type_id integer not null,
+				combination_name text
+			);
+			create table schema_combination_sequence (
+				schema_combination_id integer not null,
+				schema_value_id integer not null
+			);
+			create table schema_combination_data (
+				schema_combination_data_id integer primary key AUTOINCREMENT,
+				schema_combination_id integer not null,
+				field_name text not null,
+				field_placeholder text not null
+			);
 		`, err  => {
 			if (err) {
 				this.logger.error("Getting database error when creating tables: " + err);

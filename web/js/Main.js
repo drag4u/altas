@@ -12,6 +12,7 @@ let previousSchemaDataRowsDataValue = null;
 let schemaDataIdBeingEdited = null;
 let schemaFieldToBeDeleted = null;
 let schemaDataBeingCopied = null;
+let combinationDataToDelete = null;
 
 const API = new ApiController();
 
@@ -548,6 +549,8 @@ function ShowSchemaPage(typeId) {
 				$('#schemaVariantMatrixBody').append(row);
 			}
 		});
+
+		UpdateCombinationTable();
 	});
 	API.GetSchemaFields(typeId, response => {
 		const tBody = document.getElementById("schemaFieldBody");
@@ -654,6 +657,190 @@ function ShowSchemaFieldModal() {
 	$('#createSchemaFieldsModal').modal('show');
 }
 
+function ShowSchemaCombinationModal() {
+	$('#createSchemaCombinationModal').modal('show');
+	API.GetSchema(activeTypeData[0].type_id, response => {
+		$('#schemaCombinationVersionSelects').html('');
+		for (let i = 0; i < activeTypeData[0].version_columns; i++) {
+			let selectElement = document.createElement('select');
+			$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
+			$(selectElement).append(`<option value="-1">-</option>`);
+			response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
+				$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
+			});
+			$('#schemaCombinationVersionSelects').append(selectElement);
+		}
+		$('#schemaCombinationVersionSelects').width(activeTypeData[0].version_columns * 94);
+
+		$('#schemaCombinationVariantSelects').html('');
+		for (let i = 0; i < activeTypeData[0].variant_columns; i++) {
+			let selectElement = document.createElement('select');
+			$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantSelect' + i);
+			$(selectElement).append(`<option value="-1">-</option>`);
+			response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
+				$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
+			});
+			$('#schemaCombinationVariantSelects').append(selectElement);
+		}
+		$('#schemaCombinationVariantSelects').width(activeTypeData[0].variant_columns * 94);
+	});
+}
+
+function CreateSchemaCombination()
+{
+	const form = document.getElementById('schemaCombinationCreationForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+
+	const name = $('#schemaNewCombinationName').val();
+
+	const variantValues = $('#schemaCombinationVariantSelects select').toArray().map(c => c.value);
+	const versionValues = $('#schemaCombinationVersionSelects select').toArray().map(c => c.value);
+
+	// calculate how many values in variantValues are not '-1'
+	const variantValuesAmount = variantValues.filter(c => c != '-1').length;
+	const versionValuesAmount = versionValues.filter(c => c != '-1').length;
+	
+	if (variantValuesAmount + versionValuesAmount < 2)
+	{
+		$('#newCombinationError').show();
+		$('#newCombinationError')[0].innerText = 'Klaida: Kombinacijos reikšmės turi būti pasirinktos bent iš dviejų stulpelių!';
+		return;
+	} else {
+		$('#newCombinationError').hide();
+	}
+	// extract values from variantValues that are not "-1"
+	const variantValuesFiltered = variantValues.filter(c => c != '-1');
+	const versionValuesFiltered = versionValues.filter(c => c != '-1');
+	// combine these into a single array
+	const combinationValues = variantValuesFiltered.concat(versionValuesFiltered);
+
+	API.CreateSchemaCombination(activeTypeData[0].type_id, { name, combinationValues }, response => {
+		console.log(response);
+		$('#createSchemaCombinationModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
+SaveSchemaCombinationData = (dataId) => {
+	const form = document.getElementById('schemaCombinationDataEditForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+	const dataName = $('#schemaCombinationDataEditName').val();
+	const dataPlaceholder = $('#schemaCombinationPlaceholderEdit').val();
+
+	API.EditSchemaCombinationData(dataId, dataName, dataPlaceholder, () => {
+		$('#editSchemaCombinationDataModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
+function UpdateCombinationTable()
+{
+	API.GetSchemaCombinations(activeTypeData[0].type_id, response => {
+		const tBody = document.getElementById("schemaCombinationsBody");
+		tBody.innerHTML = "";
+		response.forEach(combination => {
+			console.log(combination);
+			const tr = document.createElement("tr");
+			$(tr).attr("combination-id", combination.schema_combination_id);
+			$(tr).addClass("table-info");
+			tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(combination.combination_name);
+			tr.appendChild(document.createElement("td"));
+			tr.appendChild(document.createElement("td"));
+			tr.appendChild(document.createElement("td")).innerHTML = `
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-sm btn-success" onClick="AddDataToCombination(${combination.schema_combination_id})">Pridėti duomenis</button>
+					<button type="button" class="btn btn-sm btn-warning" onClick="EditCombination(${combination.schema_combination_id})" disabled >Redaguoti</button>
+					<button type="button" class="btn btn-sm btn-warning" onClick="CopyCombination(${combination.schema_combination_id})" disabled >Kopijuoti</button>
+					<button type="button" class="btn btn-sm btn-danger" onClick="DeleteCombination(${combination.schema_combination_id})" disabled >Ištrinti</button>
+				</div>
+			`;
+			tBody.appendChild(tr);
+			combination.data.forEach(data => {
+				const tr = document.createElement("tr");
+				$(tr).attr("data-value-id", data.schema_combination_data_id);
+				tr.appendChild(document.createElement("td"));
+				tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(data.field_name);
+				tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(data.field_placeholder);
+				tr.appendChild(document.createElement("td")).innerHTML = `
+					<div class="btn-group" role="group">
+						<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaCombinationData(${data.schema_combination_data_id})">Redaguoti</button>
+						<button type="button" class="btn btn-sm btn-danger" onClick="DeleteSchemaCombinationData(${data.schema_combination_data_id})">Ištrinti</button>
+					</div>
+				`;
+				tBody.appendChild(tr);
+			});
+		});
+	});
+}
+
+function DeleteSchemaCombinationData(dataId)
+{
+	combinationDataToDelete = dataId;
+	$('#deleteCombinationDataModal').modal('show');
+}
+
+function DeleteCombinationData()
+{
+	API.DeleteSchemaCombinationData(combinationDataToDelete, () => {
+		$('#deleteCombinationDataModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
+function EditSchemaCombinationData(dataId)
+{
+	API.GetSchemaCombinationData(dataId, response => {
+		console.log(response[0]);
+		$('#schemaCombinationDataEditName').val(response[0].field_name);
+		$('#schemaCombinationPlaceholderEdit').val(response[0].field_placeholder);
+		$('#editSchemaCombinationDataSubmit').attr('onclick', `SaveSchemaCombinationData(${dataId})`);
+		$('#editSchemaCombinationDataModal').modal('show');
+	});
+}
+
+function ShowTypeDeleteModal(target, id)
+{
+	target.parentNode.parentElement.classList.add("table-danger");
+	setTimeout(() => target.parentNode.parentElement.classList.remove("table-danger"), 6000);
+	typeToBeDeleted = id;
+	$('#deleteTypeModal').modal('show');
+}
+
+function AddDataToCombination(combinationId)
+{
+	$('#createSchemaCombinationDataSubmit').attr('onclick', `CreateSchemaCombinationData(${combinationId})`);
+	$('#createSchemaCombinationDataModal').modal('show');
+}
+
+function CreateSchemaCombinationData(combinationId)
+{
+	const form = document.getElementById('schemaCombinationDataForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+
+	const dataName = $('#schemaCombinationDataName').val();
+	const dataPlaceholder = $('#schemaCombinationPlaceholder').val();
+
+	API.CreateSchemaCombinationData(combinationId, dataName, dataPlaceholder, () => {
+		$('#createSchemaCombinationDataModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
 function ShowSchemaFieldEditModal(fieldId) {
 	$('#editSchemaFieldsModal').modal('show');
 	API.GetSchemaField(fieldId, response => {
@@ -724,7 +911,7 @@ function ShowGenerateCoCModal()
 					$('#cocVariantSelects').html('');
 					for (let i = 0; i < typeData[0].variant_columns; i++) {
 						let selectElement = document.createElement('select');
-						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantnSelect' + i);
+						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantSelect' + i);
 						response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
 							$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
 						});
@@ -732,6 +919,29 @@ function ShowGenerateCoCModal()
 					}
 					$('#cocVariantSelects').width(typeData[0].variant_columns * 94);
 				});
+			});
+		}).trigger('change');
+	});
+}
+
+function ShowGenerateCNITModal()
+{
+	$('#cnitGenerateModal').modal('show');
+	API.GetAllTypes(response => {
+		$('#cnitTypeSelect').html('');
+		response.forEach(type => {
+			$('#cnitTypeSelect').append(`<option value="${escapeHtml(type.type_id)}">${escapeHtml(type.type_name)}</option>`);
+		});
+		$('#cnitTypeSelect').off('change').on('change', function() {
+			API.GetType(this.value, typeData => {
+				if (typeData[0].cnit_file == null)
+				{
+					$('#CNITFileWarning').show();
+					$('#cnitGenerateButton').attr('disabled', true);
+				} else {
+					$('#CNITFileWarning').hide();
+					$('#cnitGenerateButton').attr('disabled', true );
+				}
 			});
 		}).trigger('change');
 	});
@@ -1127,9 +1337,6 @@ function GenerateCoC()
 					}
 				});
 			}
-
-			
-
 		})
 	})
 

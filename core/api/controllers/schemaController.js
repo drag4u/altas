@@ -82,6 +82,90 @@ module.exports = (logger, database, utils) => {
 			const dataId = req.params.dataId;
 			let query = `DELETE FROM schema_fields WHERE schema_field_id = ${utils.Esc(dataId)}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
+		},
+
+		createCombination: async (req, res) => {
+			const typeId = req.params.typeId;
+			const { name, combinationValues } = req.body;
+			let query = `INSERT INTO schema_combination (type_id, combination_name) VALUES (${utils.Esc(typeId)}, '${utils.Esc(name)}')`;
+			utils.ExecuteAction(res, query, () => {
+				utils.ExecuteAction(res, `SELECT MAX(schema_combination_id) as "id" FROM schema_combination`, rows => {
+					const newCombinationID = rows[0].id;
+					let query = `INSERT INTO schema_combination_sequence (schema_combination_id, schema_value_id) VALUES `;
+					for (let i = 0; i < combinationValues.length; i++) {
+						const dataRow = combinationValues[i];
+						query += `(${utils.Esc(newCombinationID)}, ${utils.Esc(dataRow)}),`;
+					}
+					query = query.slice(0, -1);
+					query += `;`;
+					utils.ExecuteAction(res, query, () => {
+						res.status(200).json({info: 'Combination successfully created'});
+					});
+				});
+			});
+		},
+
+		createCombinationData: async (req, res) => {
+			const combinationId = req.params.combinationId;
+			const { dataName, placeholder } = req.body;
+			console.log( combinationId, dataName, placeholder);
+			let query = `INSERT INTO schema_combination_data (schema_combination_id, field_name, field_placeholder) VALUES (${utils.Esc(combinationId)}, '${utils.Esc(dataName)}', '${utils.Esc(placeholder)}')`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+		},
+
+		getCombinations: async (req, res) => {
+			const typeId = req.params.typeId;
+			utils.ExecuteAction(res, `SELECT * from schema_combination where type_id = ${utils.Esc(typeId)}`, rows => {
+				// also select from schema_combination_sequence
+				const combinations = [];
+				const promises = [];
+				for (let i = 0; i < rows.length; i++) {
+					const combination = rows[i];
+					promises.push(new Promise(resolve => {
+						utils.ExecuteAction(res, `SELECT * from schema_combination_sequence where schema_combination_id = ${utils.Esc(combination.schema_combination_id)}`, sequenceRows => {
+							combination.sequence = sequenceRows;
+							combinations.push(combination);
+							resolve();
+						});
+					}));
+				}
+				Promise.all(promises).then(() => {
+					// also get schema_combination_data
+					const promises = [];
+					for (let i = 0; i < combinations.length; i++) {
+						const combination = combinations[i];
+						promises.push(new Promise(resolve => {
+							utils.ExecuteAction(res, `SELECT * from schema_combination_data where schema_combination_id = ${utils.Esc(combination.schema_combination_id)}`, dataRows => {
+								combination.data = dataRows;
+								resolve();
+							});
+						}));
+					}
+					Promise.all(promises).then(() => {
+						res.status(200).json(combinations);
+					});
+				});
+			});
+		},
+
+		deleteCombinationData: async (req, res) => {
+			const combinationDataId = req.params.combinationDataId;
+			let query = `DELETE FROM schema_combination_data WHERE schema_combination_data_id = ${utils.Esc(combinationDataId)}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
+		},
+
+		getCombinationData: async (req, res) => {
+			const combinationDataId = req.params.combinationDataId;
+			utils.ExecuteAction(res, `SELECT * from schema_combination_data where schema_combination_data_id = ${utils.Esc(combinationDataId)}`, rows => {
+				res.status(200).json(rows);
+			});
+		},
+
+		editCombinationData: async (req, res) => {
+			const combinationDataId = req.params.combinationDataId;
+			const { dataName, placeholder } = req.body;
+			let query = `UPDATE schema_combination_data SET field_name = '${utils.Esc(dataName)}', field_placeholder = '${utils.Esc(placeholder)}' WHERE schema_combination_data_id = ${utils.Esc(combinationDataId)}`;
+			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
 		}
     };
 };

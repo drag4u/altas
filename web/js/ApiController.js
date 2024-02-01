@@ -295,6 +295,80 @@ class ApiController
 		});
 	}
 
+	CreateSchemaCombination(typeId, data, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/createCombination/" + typeId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify(data),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	GetSchemaCombinations(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/getCombinations/" + typeId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	CreateSchemaCombinationData(combinationId, dataName, placeholder, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/createCombinationData/" + combinationId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ dataName, placeholder }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	DeleteSchemaCombinationData(combinationDataId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/deleteCombinationData/${combinationDataId}`,
+			type: "DELETE",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	}
+
+	GetSchemaCombinationData(combinationId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/combinationData/${combinationId}`,
+			type: "GET",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	
+	}
+
+	EditSchemaCombinationData(combinationDataId, dataName, placeholder, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/combinationData/${combinationDataId}`,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify({ dataName, placeholder }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	}
+
 	EditSchemaData(schemaDataId, placeholder, data, callback)
 	{
 		$.ajax({
