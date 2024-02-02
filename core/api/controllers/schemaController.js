@@ -105,6 +105,67 @@ module.exports = (logger, database, utils) => {
 			});
 		},
 
+		editCombination: async (req, res) => {
+			const combinationId = req.params.combinationId;
+			const { name, combinationValues } = req.body;
+			// delete existing sequence
+			let query = `DELETE FROM schema_combination_sequence WHERE schema_combination_id = ${utils.Esc(combinationId)}`;
+			utils.ExecuteAction(res, query, () => {
+				// insert new sequence
+				let query = `INSERT INTO schema_combination_sequence (schema_combination_id, schema_value_id) VALUES `;
+				for (let i = 0; i < combinationValues.length; i++) {
+					const dataRow = combinationValues[i];
+					query += `(${utils.Esc(combinationId)}, ${utils.Esc(dataRow)}),`;
+				}
+				query = query.slice(0, -1);
+				query += `;`;
+				utils.ExecuteAction(res, query, () => {
+					// update combination name
+					let query = `UPDATE schema_combination SET combination_name = '${utils.Esc(name)}' WHERE schema_combination_id = ${utils.Esc(combinationId)}`;
+					utils.ExecuteAction(res, query, () => {
+						res.status(200).json({info: 'Combination successfully updated'});
+					});
+				});
+			});
+		},
+
+		copyCombination: async (req, res) => {
+			const combinationId = req.params.combinationId;
+			utils.ExecuteAction(res, `SELECT * from schema_combination where schema_combination_id = ${utils.Esc(combinationId)}`, rows => {
+				const combination = rows[0];
+				let query = `INSERT INTO schema_combination (type_id, combination_name) VALUES (${utils.Esc(combination.type_id)}, '${utils.Esc(combination.combination_name)}')`;
+				utils.ExecuteAction(res, query, () => {
+					utils.ExecuteAction(res, `SELECT MAX(schema_combination_id) as "id" FROM schema_combination`, rows => {
+						const newCombinationID = rows[0].id;
+						utils.ExecuteAction(res, `SELECT * from schema_combination_sequence where schema_combination_id = ${utils.Esc(combinationId)}`, sequenceRows => {
+							let query = `INSERT INTO schema_combination_sequence (schema_combination_id, schema_value_id) VALUES `;
+							for (let i = 0; i < sequenceRows.length; i++) {
+								const sequence = sequenceRows[i];
+								query += `(${utils.Esc(newCombinationID)}, ${utils.Esc(sequence.schema_value_id)}),`;
+							}
+							query = query.slice(0, -1);
+							query += `;`;
+							utils.ExecuteAction(res, query, () => {
+								// now copy schema_combination_data
+								utils.ExecuteAction(res, `SELECT * from schema_combination_data where schema_combination_id = ${utils.Esc(combinationId)}`, dataRows => {
+									let query = `INSERT INTO schema_combination_data (schema_combination_id, field_name, field_placeholder) VALUES `;
+									for (let i = 0; i < dataRows.length; i++) {
+										const data = dataRows[i];
+										query += `(${utils.Esc(newCombinationID)}, '${utils.Esc(data.field_name)}', '${utils.Esc(data.field_placeholder)}'),`;
+									}
+									query = query.slice(0, -1);
+									query += `;`;
+									utils.ExecuteAction(res, query, () => {
+										res.status(200).json({info: 'Combination successfully copied'});
+									});
+								});
+							});
+						});
+					});
+				});
+			});
+		},
+
 		createCombinationData: async (req, res) => {
 			const combinationId = req.params.combinationId;
 			const { dataName, placeholder } = req.body;
@@ -154,6 +215,18 @@ module.exports = (logger, database, utils) => {
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
 		},
 
+		deleteCombination: async (req, res) => {
+			const combinationId = req.params.combinationId;
+			let query = `DELETE FROM schema_combination WHERE schema_combination_id = ${utils.Esc(combinationId)}`;
+			utils.ExecuteAction(res, query, () => {
+				let query = `DELETE FROM schema_combination_sequence WHERE schema_combination_id = ${utils.Esc(combinationId)}`;
+				utils.ExecuteAction(res, query, () => {
+					let query = `DELETE FROM schema_combination_data WHERE schema_combination_id = ${utils.Esc(combinationId)}`;
+					utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully deleted'}));
+				});
+			});
+		},
+
 		getCombinationData: async (req, res) => {
 			const combinationDataId = req.params.combinationDataId;
 			utils.ExecuteAction(res, `SELECT * from schema_combination_data where schema_combination_data_id = ${utils.Esc(combinationDataId)}`, rows => {
@@ -166,6 +239,15 @@ module.exports = (logger, database, utils) => {
 			const { dataName, placeholder } = req.body;
 			let query = `UPDATE schema_combination_data SET field_name = '${utils.Esc(dataName)}', field_placeholder = '${utils.Esc(placeholder)}' WHERE schema_combination_data_id = ${utils.Esc(combinationDataId)}`;
 			utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+		},
+
+		copyCombinationData: async (req, res) => {
+			const combinationDataId = req.params.combinationDataId;
+			utils.ExecuteAction(res, `SELECT * from schema_combination_data where schema_combination_data_id = ${utils.Esc(combinationDataId)}`, rows => {
+				const data = rows[0];
+				let query = `INSERT INTO schema_combination_data (schema_combination_id, field_name, field_placeholder) VALUES (${utils.Esc(data.schema_combination_id)}, '${utils.Esc(data.field_name)}', '${utils.Esc(data.field_placeholder)}')`;
+				utils.ExecuteAction(res, query, () => res.status(200).json({info: 'successfully inserted'}));
+			})
 		}
     };
 };

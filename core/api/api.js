@@ -64,7 +64,10 @@ class API{
 		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData);
 		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData);
 		this.app.post('/schema/createCombination/:typeId', this.schemaController.createCombination);
+		this.app.post('/schema/editCombination/:combinationId', this.schemaController.editCombination);
+		this.app.post('/schema/copyCombination/:combinationId', this.schemaController.copyCombination);
 		this.app.post('/schema/createCombinationData/:combinationId', this.schemaController.createCombinationData);
+		this.app.post('/schema/copyCombinationData/:combinationDataId', this.schemaController.copyCombinationData);
 		this.app.get('/schema/combinationData/:combinationDataId', this.schemaController.getCombinationData);
 		this.app.post('/schema/combinationData/:combinationDataId', this.schemaController.editCombinationData);
 		this.app.post('/schema/getCombinations/:typeId', this.schemaController.getCombinations);
@@ -72,6 +75,7 @@ class API{
 		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity);
 		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
 		this.app.delete('/schema/deleteCombinationData/:combinationDataId', this.schemaController.deleteCombinationData);
+		this.app.delete('/schema/deleteCombination/:combinationId', this.schemaController.deleteCombination);
 		this.app.post('/schema/createField/:typeId', this.schemaController.createField);
 		this.app.get('/schema/fields/:fieldId', this.schemaController.getFields);
 		this.app.get('/schema/field/:fieldId', this.schemaController.getField);

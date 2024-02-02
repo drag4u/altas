@@ -13,6 +13,8 @@ let schemaDataIdBeingEdited = null;
 let schemaFieldToBeDeleted = null;
 let schemaDataBeingCopied = null;
 let combinationDataToDelete = null;
+let activeSchemaCombinations = null;
+let activelyEditedCombination = null;
 
 const API = new ApiController();
 
@@ -686,6 +688,98 @@ function ShowSchemaCombinationModal() {
 	});
 }
 
+function EditCombination(combinationId)
+{
+	activelyEditedCombination = combinationId;
+	$('#editSchemaCombinationModal').modal('show');
+	const combinationData = activeSchemaCombinations.filter(c => c.schema_combination_id == combinationId)[0];
+	$('#schemaEditCombinationName').val(combinationData.combination_name);
+
+	API.GetSchema(activeTypeData[0].type_id, response => {
+		$('#editSchemaCombinationVersionSelects').html('');
+		for (let i = 0; i < activeTypeData[0].version_columns; i++) {
+			let selectElement = document.createElement('select');
+			$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
+			$(selectElement).append(`<option value="-1">-</option>`);
+			response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
+				const combinationMatch = combinationData.sequence.filter(c => c.schema_value_id == row.schema_value_id);
+				let option = document.createElement('option');
+				
+				if (combinationMatch.length > 0)
+				{
+					$(option).attr('selected','selected');
+				}
+				option.value = escapeHtml(row.schema_value_id);
+				option.innerText = escapeHtml(row.unique_matrix_value);
+				$(selectElement).append(option);
+			});
+			$('#editSchemaCombinationVersionSelects').append(selectElement);
+		}
+		$('#editSchemaCombinationVersionSelects').width(activeTypeData[0].version_columns * 94);
+
+		$('#editSchemaCombinationVariantSelects').html('');
+		for (let i = 0; i < activeTypeData[0].variant_columns; i++) {
+			let selectElement = document.createElement('select');
+			$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantSelect' + i);
+			$(selectElement).append(`<option value="-1">-</option>`);
+			response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
+				const combinationMatch = combinationData.sequence.filter(c => c.schema_value_id == row.schema_value_id);
+				let option = document.createElement('option');
+				
+				if (combinationMatch.length > 0)
+				{
+					$(option).attr('selected','selected');
+				}
+				option.value = escapeHtml(row.schema_value_id);
+				option.innerText = escapeHtml(row.unique_matrix_value);
+				$(selectElement).append(option);
+			});
+			$('#editSchemaCombinationVariantSelects').append(selectElement);
+		}
+		$('#editSchemaCombinationVariantSelects').width(activeTypeData[0].variant_columns * 94);
+	});
+}
+
+function EditSchemaCombination ()
+{
+	const form = document.getElementById('schemaCombinationEditingForm');
+	if (!form.checkValidity()) {
+		event.preventDefault();
+		event.stopPropagation();
+		form.classList.add('was-validated');
+		return;
+	}
+	
+	const name = $('#schemaEditCombinationName').val();
+
+	const variantValues = $('#editSchemaCombinationVariantSelects select').toArray().map(c => c.value);
+	const versionValues = $('#editSchemaCombinationVersionSelects select').toArray().map(c => c.value);
+
+	// calculate how many values in variantValues are not '-1'
+	const variantValuesAmount = variantValues.filter(c => c != '-1').length;
+	const versionValuesAmount = versionValues.filter(c => c != '-1').length;
+	
+	if (variantValuesAmount + versionValuesAmount < 2)
+	{
+		$('#editCombinationError').show();
+		$('#editCombinationError')[0].innerText = 'Klaida: Kombinacijos reikšmės turi būti pasirinktos bent iš dviejų stulpelių!';
+		return;
+	} else {
+		$('#editCombinationError').hide();
+	}
+	// extract values from variantValues that are not "-1"
+	const variantValuesFiltered = variantValues.filter(c => c != '-1');
+	const versionValuesFiltered = versionValues.filter(c => c != '-1');
+	// combine these into a single array
+	const combinationValues = variantValuesFiltered.concat(versionValuesFiltered);
+
+	API.EditSchemaCombination(activelyEditedCombination, { name, combinationValues }, response => {
+		console.log(response);
+		$('#editSchemaCombinationModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
 function CreateSchemaCombination()
 {
 	const form = document.getElementById('schemaCombinationCreationForm');
@@ -746,6 +840,7 @@ SaveSchemaCombinationData = (dataId) => {
 function UpdateCombinationTable()
 {
 	API.GetSchemaCombinations(activeTypeData[0].type_id, response => {
+		activeSchemaCombinations = response;
 		const tBody = document.getElementById("schemaCombinationsBody");
 		tBody.innerHTML = "";
 		response.forEach(combination => {
@@ -759,9 +854,9 @@ function UpdateCombinationTable()
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<div class="btn-group" role="group">
 					<button type="button" class="btn btn-sm btn-success" onClick="AddDataToCombination(${combination.schema_combination_id})">Pridėti duomenis</button>
-					<button type="button" class="btn btn-sm btn-warning" onClick="EditCombination(${combination.schema_combination_id})" disabled >Redaguoti</button>
-					<button type="button" class="btn btn-sm btn-warning" onClick="CopyCombination(${combination.schema_combination_id})" disabled >Kopijuoti</button>
-					<button type="button" class="btn btn-sm btn-danger" onClick="DeleteCombination(${combination.schema_combination_id})" disabled >Ištrinti</button>
+					<button type="button" class="btn btn-sm btn-warning" onClick="EditCombination(${combination.schema_combination_id})" >Redaguoti</button>
+					<button type="button" class="btn btn-sm btn-warning" onClick="ShowCopyCombinationModal(${combination.schema_combination_id})">Kopijuoti</button>
+					<button type="button" class="btn btn-sm btn-danger" onClick="ShowDeleteCombinationModal(${combination.schema_combination_id})">Ištrinti</button>
 				</div>
 			`;
 			tBody.appendChild(tr);
@@ -774,13 +869,55 @@ function UpdateCombinationTable()
 				tr.appendChild(document.createElement("td")).innerHTML = `
 					<div class="btn-group" role="group">
 						<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaCombinationData(${data.schema_combination_data_id})">Redaguoti</button>
-						<button type="button" class="btn btn-sm btn-warning" onClick="CopySchemaCombinationData(${data.schema_combination_data_id})" disabled>Kopijuoti</button>
+						<button type="button" class="btn btn-sm btn-warning" onClick="CopySchemaCombinationData(${data.schema_combination_data_id})">Kopijuoti</button>
 						<button type="button" class="btn btn-sm btn-danger" onClick="DeleteSchemaCombinationData(${data.schema_combination_data_id})">Ištrinti</button>
 					</div>
 				`;
 				tBody.appendChild(tr);
 			});
 		});
+	});
+}
+
+function ShowDeleteCombinationModal(combinationId)
+{
+	$('#deleteCombinationSubmit').attr('onclick', `DeleteCombination(${combinationId})`);
+	$('#deleteCombinationModal').modal('show');
+}
+
+function ShowCopyCombinationModal(combinationId)
+{
+	$('#combinationCopySubmitButton').attr('onclick', `CopyCombination(${combinationId})`);
+	$('#copyCombinationModal').modal('show');
+}
+
+function DeleteCombination(combinationId)
+{
+	API.DeleteSchemaCombination(combinationId, () => {
+		$('#deleteCombinationModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
+function CopyCombination(combinationId)
+{
+	API.CopySchemaCombination(combinationId, () => {
+		$('#copyCombinationModal').modal('hide');
+		UpdateCombinationTable();
+	});
+}
+
+function CopySchemaCombinationData(dataId)
+{
+	$('#combinationDataCopySubmitButton').attr('onclick', `CopyCombinationData(${dataId})`);
+	$('#copyCombinationDataModal').modal('show');
+}
+
+function CopyCombinationData(dataId)
+{
+	API.CopySchemaCombinationData(dataId, () => {
+		$('#copyCombinationDataModal').modal('hide');
+		UpdateCombinationTable();
 	});
 }
 
@@ -1297,7 +1434,7 @@ function PasteSchemaData()
 	});
 }
 
-function GenerateCoC()
+function CollectPlaceholderData(mainCallback)
 {
 	const typeId = $('#cocTypeSelect').val();
 	let placeholderData = [];
@@ -1363,11 +1500,56 @@ function GenerateCoC()
 
 	function ContinueFurther()
 	{
+		console.log(placeholderData);
+		API.GetSchemaCombinations(typeId, data => {
+			let versionValues = $('#cocVersionSelects .customSelect').toArray().map(c => c.value);
+			let variantValues = $('#cocVariantSelects .customSelect').toArray().map(c => c.value);
+			data.forEach(combination => {
+				let combinationMatch = combination.sequence.filter(c => versionValues.includes(c.schema_value_id.toString()) || variantValues.includes(c.schema_value_id.toString()));
+				if (combinationMatch.length == combination.sequence.length)
+				{
+					combination.data.forEach(row => {
+						placeholderData.push({ placeholder: row.field_placeholder, data: row.field_name})
+					});
+				}
+			});
+			mainCallback(placeholderData);
+		});
+	}
+}
+
+function GenerateCoC()
+{
+	const typeId = $('#cocTypeSelect').val();
+	CollectPlaceholderData(placeholderData => {
 		API.GenerateCoC(typeId, placeholderData, (response) => {
 			if (response.error == undefined)
 			{
 				window.open("/files/" + response.fileName, "_blank");
 			}
+		});
+	});
+}
+
+function CollectAndShowPlaceholderData()
+{
+	if ($('#dataCollapse').hasClass('show'))
+	{
+		$('#dataCollapseButton').click();
+	} else {
+		CollectPlaceholderData(placeholderData => {
+			$('#placeholderDataPreview').html('');
+			placeholderData.forEach(row => {
+				// append table rows
+				$('#placeholderDataPreview').append(`
+					<tr>
+						<td>${row.placeholder}</td>
+						<td>$\{${row.placeholder}}</td>
+						<td>${row.data}</td>
+					</tr>
+				`);
+			});
+			$('#dataCollapseButton').click();
 		});
 	}
 }

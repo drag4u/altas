@@ -308,6 +308,41 @@ class ApiController
 		});
 	}
 
+	EditSchemaCombination(combinationId, data, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/editCombination/" + combinationId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify(data),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	DeleteSchemaCombination(combinationId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/deleteCombination/${combinationId}`,
+			type: "DELETE",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
+	CopySchemaCombination(combinationId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/copyCombination/${combinationId}`,
+			type: "POST",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	GetSchemaCombinations(typeId, callback)
 	{
 		$.ajax({
@@ -364,6 +399,17 @@ class ApiController
 			contentType : 'application/json',
 			dataType: "json",
 			data: JSON.stringify({ dataName, placeholder }),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});	
+	}
+
+	CopySchemaCombinationData(combinationDataId, callback)
+	{
+		$.ajax({
+			url: `http://${this.mainUrl}:3000/schema/copyCombinationData/${combinationDataId}`,
+			type: "POST",
+			dataType: "json",
 			success: response => callback(response),
 			error: (xhr, status) => console.log(xhr, status)
 		});	
