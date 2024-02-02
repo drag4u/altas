@@ -461,7 +461,10 @@ class ApiController
 			dataType: "json",
 			data: JSON.stringify({ placeholderData }),
 			success: response => callback(response),
-			error: (xhr, status) => console.log(xhr, status)
+			error: (xhr, status) => {
+				console.log(xhr, status)
+				alert("Klaida generuojant CoC failą. Patikrinkite šabloną ar nėra { ir } simbolių padėtų kur nereikia.");
+			}
 		});
 	}
 }

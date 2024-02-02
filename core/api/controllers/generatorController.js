@@ -27,7 +27,7 @@ module.exports = (logger, database, utils) => {
                         res.status(400).send('Unsupported file type');
                     }
                 } catch (error) {
-                    res.status(500).json({ error: error.message });
+                    res.status(500).json({ error });
                 }
             });
         }
