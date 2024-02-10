@@ -15,6 +15,7 @@ let schemaDataBeingCopied = null;
 let combinationDataToDelete = null;
 let activeSchemaCombinations = null;
 let activelyEditedCombination = null;
+let cocActiveCombinations = null;
 
 const API = new ApiController();
 
@@ -159,6 +160,11 @@ function UpdateTypeTable()
 			fileLink2.target = '_blank';
 			tr.appendChild(document.createElement("td")).append(fileLink);
 			tr.appendChild(document.createElement("td")).append(fileLink2);
+			let td = document.createElement("td");
+			GetAllCombinations(row.type_id, combinations => {
+				td.innerText = combinations.length;
+			});
+			tr.appendChild(td);
 			tr.appendChild(document.createElement("td")).innerHTML = `
 				<button type="button" class="btn btn-sm btn-primary" onclick="ShowMatrixPage(${row.type_id})">Matricos</button>
 				<button type="button" class="btn btn-sm btn-primary" onclick="ShowSchemaPage(${row.type_id})"">Schema</button>
@@ -609,8 +615,13 @@ function GetAmountOfRowsToRender(data, versionVariant)
 
 function UpdateMatrixTable(typeId)
 {
+	const tBody = document.getElementById("matrixTable");
+	tBody.innerHTML = "";
+	$('#matrixTableWarning').html(`<div class="spinner-border text-secondary" role="status"></div>`);
+	$('#matrixTableWarning').show();
 	API.GetAllMatrices(typeId, response => {
 		if (response.length == 0) {
+			$('#matrixTableWarning').html("<h3>Sąrašas tuščias</h3>");
 			$('#matrixTableWarning').show();
 		} else {
 			$('#matrixTableWarning').hide();
@@ -618,8 +629,6 @@ function UpdateMatrixTable(typeId)
 		const rowData = OrderMatricData(response);
 		typeMatrixData = rowData;
 
-		const tBody = document.getElementById("matrixTable");
-		tBody.innerHTML = "";
 		let matrixIndex = 1;
 		Object.keys(rowData).forEach( matrixId => {
 			const tr = document.createElement("tr");
@@ -864,8 +873,8 @@ function UpdateCombinationTable()
 				const tr = document.createElement("tr");
 				$(tr).attr("data-value-id", data.schema_combination_data_id);
 				tr.appendChild(document.createElement("td"));
-				tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(data.field_name);
 				tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(data.field_placeholder);
+				tr.appendChild(document.createElement("td")).innerHTML = escapeHtml(data.field_name);
 				tr.appendChild(document.createElement("td")).innerHTML = `
 					<div class="btn-group" role="group">
 						<button type="button" class="btn btn-sm btn-warning" onClick="EditSchemaCombinationData(${data.schema_combination_data_id})">Redaguoti</button>
@@ -1003,6 +1012,76 @@ function EditSchemaField(fieldId) {
 	});
 }
 
+function generateCombinations(matrixData) {
+    // Determine the highest column index for versions and variants
+    let maxVersionColumn = 0;
+    let maxVariantColumn = 0;
+
+    matrixData.forEach(item => {
+        if (item.version_variant === 0) {
+            maxVersionColumn = Math.max(maxVersionColumn, item.column);
+        } else if (item.version_variant === 1) {
+            maxVariantColumn = Math.max(maxVariantColumn, item.column);
+        }
+    });
+
+    // Initialize arrays to hold values for each column
+    let versionValues = Array.from({ length: maxVersionColumn + 1 }, () => new Set());
+    let variantValues = Array.from({ length: maxVariantColumn + 1 }, () => new Set());
+
+    // Populate the Sets with values from matrixData
+    matrixData.forEach(item => {
+        if (item.version_variant === 0 && item.value !== '') {
+            versionValues[item.column].add(item.value);
+        } else if (item.version_variant === 1 && item.value !== '') {
+            variantValues[item.column].add(item.value);
+        }
+    });
+
+    // Convert Sets to Arrays for easier manipulation
+    versionValues = versionValues.map(set => Array.from(set));
+    variantValues = variantValues.map(set => Array.from(set));
+
+    // Generate all combinations for versions and variants
+    const versionCombinations = generateAllCombinations(versionValues);
+    const variantCombinations = generateAllCombinations(variantValues);
+
+    // Combine version and variant combinations into the result array
+    const result = variantCombinations.map(variantCombo => {
+        return versionCombinations.map(versionCombo => ({
+            variant: variantCombo,
+            version: versionCombo
+        }));
+    }).flat();
+
+    return result;
+}
+
+// Recursive function to generate all combinations
+function generateAllCombinations(valuesArrays, index = 0, result = [], current = []) {
+    if (index === valuesArrays.length) {
+        result.push([...current]);
+        return;
+    }
+
+    for (let value of valuesArrays[index]) {
+        current[index] = value;
+        generateAllCombinations(valuesArrays, index + 1, result, current);
+    }
+
+    if (index === 0) return result;
+}
+
+function GetAllCombinations(typeId, callback)
+{
+	API.GetAllMatrices(typeId, matrixData => {
+		const orderedData = OrderMatricData(matrixData);
+		let allCombinations = [];
+		Object.keys(orderedData).forEach(matrixId => allCombinations.push(...generateCombinations(orderedData[matrixId])));
+		callback(allCombinations);
+	});
+}
+
 function ShowGenerateCoCModal()
 {
 	$('#cocGenerateModal').modal('show');
@@ -1012,10 +1091,12 @@ function ShowGenerateCoCModal()
 			$('#cocTypeSelect').append(`<option value="${escapeHtml(type.type_id)}">${escapeHtml(type.type_name)}</option>`);
 		});
 		$('#cocTypeSelect').off('change').on('change', function() {
-			API.GetSchemaFields(this.value, fields => {
+			$('.cocModalLoading').show();
+			$('.otherCoCContent').hide();
+			API.GetSchemaFields(this.value, schemaFields => {
 				$('#cocCustomFieldHolder').html('');
 				let index = 0;
-				fields.forEach(field => {
+				schemaFields.forEach(field => {
 					$('#cocCustomFieldHolder').append(`
 						<div class="input-group mb-1">
 							<span class="input-group-text" id="customFieldAddon${index}">${escapeHtml(field.field_name)}</span>
@@ -1024,38 +1105,45 @@ function ShowGenerateCoCModal()
 					`);
 					index++;
 				});
-			});
-			API.GetType(this.value, typeData => {
-				if (typeData[0].coc_file == null)
-				{
-					$('#CoCFileWarning').show();
-					$('#cocGenerateButton').attr('disabled', true);
-				} else {
-					$('#CoCFileWarning').hide();
-					$('#cocGenerateButton').attr('disabled', false );
-				}
-				API.GetSchema(this.value, response => {
-					$('#cocVersionSelects').html('');
-					for (let i = 0; i < typeData[0].version_columns; i++) {
-						let selectElement = document.createElement('select');
-						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
-						response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
-							$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
-						});
-						$('#cocVersionSelects').append(selectElement);
-					}
-					$('#cocVersionSelects').width(typeData[0].version_columns * 94);
 
-					$('#cocVariantSelects').html('');
-					for (let i = 0; i < typeData[0].variant_columns; i++) {
-						let selectElement = document.createElement('select');
-						$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantSelect' + i);
-						response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
-							$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
+				API.GetType(this.value, typeData => {
+					GetAllCombinations(this.value, combinations => {
+						cocActiveCombinations = combinations;
+						if (typeData[0].coc_file == null)
+						{
+							$('#CoCFileWarning').show();
+							$('#cocGenerateButton').attr('disabled', true);
+						} else {
+							$('#CoCFileWarning').hide();
+							$('#cocGenerateButton').attr('disabled', false );
+						}
+						API.GetSchema(this.value, response => {
+							$('#cocVersionSelects').html('');
+							for (let i = 0; i < typeData[0].version_columns; i++) {
+								let selectElement = document.createElement('select');
+								$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('versionSelect' + i);
+								response.filter(c => c.version_variant == 0 && c.column == i).forEach(row => {
+									$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
+								});
+								$('#cocVersionSelects').append(selectElement);
+							}
+							$('#cocVersionSelects').width(typeData[0].version_columns * 94);
+		
+							$('#cocVariantSelects').html('');
+							for (let i = 0; i < typeData[0].variant_columns; i++) {
+								let selectElement = document.createElement('select');
+								$(selectElement).addClass('form-select').addClass('form-select-sm').addClass('customSelect').addClass('variantSelect' + i);
+								response.filter(c => c.version_variant == 1 && c.column == i).forEach(row => {
+									$(selectElement).append(`<option value="${escapeHtml(row.schema_value_id)}">${escapeHtml(row.unique_matrix_value)}</option>`);
+								});
+								$('#cocVariantSelects').append(selectElement);
+							}
+							$('#cocVariantSelects').width(typeData[0].variant_columns * 94);
+
+							$('.cocModalLoading').hide();
+							$('.otherCoCContent').show();
 						});
-						$('#cocVariantSelects').append(selectElement);
-					}
-					$('#cocVariantSelects').width(typeData[0].variant_columns * 94);
+					});
 				});
 			});
 		}).trigger('change');
@@ -1372,21 +1460,42 @@ function CreateMatrixDivTable(matrixValues, versionVariant)
 	div.style.position = "relative";
 	columnAmount = versionVariant == 0 ? activeTypeData[0].version_columns : activeTypeData[0].variant_columns;
 	rowAmount = versionVariant == 0 ? activeTypeData[0].version_rows : activeTypeData[0].variant_rows;
-	div.style.width = (40 * columnAmount)+ "px";
-	div.style.height = (24 * rowAmount)+ "px";
 	
+	const tds = []
+
+	const table = document.createElement("table");
+	for (let i = 0; i < rowAmount; i++) {
+		tds.push([]);
+		const tr = document.createElement("tr");
+		for (let j = 0; j < columnAmount; j++) {
+			tds[i][j] = document.createElement("td");
+			tds[i][j].classList.add("matrixInput");
+			tr.appendChild(tds[i][j]);
+		}
+		table.appendChild(tr);
+	}
+
 	matrixValues.forEach(row => {
 		if (row.version_variant == versionVariant) {
-			let inputdiv = document.createElement("div");
-			inputdiv.classList.add("matrixInput");
-			inputdiv.innerHTML = row.value;
-			inputdiv.style.position = "absolute";
-			inputdiv.style.left = (40 * row.column) + "px";
-			inputdiv.style.top = (20 * row.row) + "px";
-			div.appendChild(inputdiv);
+			tds[row.row][row.column].innerHTML = row.value;
 		}
 	});
-	return div.outerHTML;
+
+	// remove empty rows backwards
+	for (let i = rowAmount - 1; i >= 0; i--) {
+		let empty = true;
+		for (let j = 0; j < columnAmount; j++) {
+			if (tds[i][j].innerHTML != '') {
+				empty = false;
+				break;
+			}
+		}
+		if (empty) {
+			table.deleteRow(i);
+		}
+	}
+
+	return table.outerHTML;
 }
 
 function OrderMatricData(matrixRows)
@@ -1518,17 +1627,51 @@ function CollectPlaceholderData(mainCallback)
 	}
 }
 
+const compareArrays = (a, b) => {
+	if (a.length !== b.length) return false;
+	else {
+	  // Comparing each element of the arrays
+	  for (var i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+		  return false;
+		}
+	  }
+	  return true;
+	}
+};
+
+function combinationExists(combinations, targetCombination) {
+	return combinations.some(combination => {
+		// Check if variant arrays are equal
+		const variantsMatch = compareArrays(combination.variant, targetCombination.variant);
+		// Check if version arrays are equal
+		const versionsMatch = compareArrays(combination.version, targetCombination.version);
+
+		// If both variants and versions match, the combination exists
+		return variantsMatch && versionsMatch;
+	});
+}
+
 function GenerateCoC()
 {
-	const typeId = $('#cocTypeSelect').val();
-	CollectPlaceholderData(placeholderData => {
-		API.GenerateCoC(typeId, placeholderData, (response) => {
-			if (response.error == undefined)
-			{
-				window.open("/files/" + response.fileName, "_blank");
-			}
+	const currentCombination = {variant: [], version: []};
+	$('#cocVariantSelects .customSelect option:selected').toArray().forEach(c => currentCombination.variant.push(c.text));
+	$('#cocVersionSelects .customSelect option:selected').toArray().forEach(c => currentCombination.version.push(c.text))
+
+	if (combinationExists(cocActiveCombinations, currentCombination))
+	{
+		const typeId = $('#cocTypeSelect').val();
+		CollectPlaceholderData(placeholderData => {
+			API.GenerateCoC(typeId, placeholderData, (response) => {
+				if (response.error == undefined)
+				{
+					window.open("/files/" + response.fileName, "_blank");
+				}
+			});
 		});
-	});
+	} else {
+		alert('Pasirinkta kombinacija neegzistuoja tarp visų ' + cocActiveCombinations.length + ' tipo matricų kombinacijų!');
+	}
 }
 
 function CollectAndShowPlaceholderData()

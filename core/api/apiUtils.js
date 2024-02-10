@@ -78,7 +78,7 @@ class ApiUtils
 								}
 								let deleteQuery = 'DELETE FROM schema_values WHERE schema_value_id IN (';
 								toDelete.forEach(id => {
-									deleteQuery += `${this.Esc(id)},`;
+									deleteQuery += `${THIS.Esc(id)},`;
 								});
 								deleteQuery = deleteQuery.slice(0, -1);
 								deleteQuery += `);`;
