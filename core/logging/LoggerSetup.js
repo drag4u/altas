@@ -16,7 +16,7 @@ class LoggerSetup {
 
         const transports = [
             new NoRepeatConsoleTransport({ handleExceptions: true }),
-            new NoRepeatFileTransport({ filename: `data\\logs\\${LoggerSetup.GetDate()}-Logs.log`, json: true })
+            new NoRepeatFileTransport({ filename: `./data/logs/${LoggerSetup.GetDate()}-Logs.log`, json: true })
         ];
 
         return {
