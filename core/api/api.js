@@ -52,6 +52,7 @@ class API{
 		this.app.post('/type/addRow/:typeId/:versionVariant/:rowId', this.typeController.addRow);
 
 		this.app.get('/files/:filename', this.fileController.getFile);
+		this.app.get('/files/temporary/:filename', this.fileController.getTemporaryFile);
 
 		this.app.get('/matrix/all/:id', this.matrixController.getAllMatrices);
 		this.app.get('/matrix/:id', this.matrixController.getMatrix);
@@ -83,6 +84,7 @@ class API{
 		this.app.delete('/schema/deleteField/:dataId', this.schemaController.deleteSchemaFieldData);
 
 		this.app.post('/generateCoC/:typeId', this.generatorController.GenerateCoC);
+		this.app.post('/generateCNIT/:typeId', this.generatorController.GenerateCNIT);
 	}
 }
 

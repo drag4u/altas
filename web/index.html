@@ -1023,6 +1023,15 @@
 								<select class="form-select" style="margin-bottom: 16px;" id="cnitTypeSelect"></select>
 							</div>
 						</div>
+						<div class="row">
+							<p>CNIT šablono žymenų formatavimo pavyzdžiai:</p>
+							<ul style="margin-left: 60px;">
+								<li>Žymuo: <code>${table:altas.<strong style="border: blue solid 1px; padding: 3px;">zymensPavadinimas</strong>}</code></li>
+								<li>Modelis: <code>${table:altas.<strong style="border: blue solid 1px; padding: 3px;">modelis</strong>}</code></li>
+								<li>Data: <code>${table:altas.<strong style="border: blue solid 1px; padding: 3px;">data</strong>}</code></li>
+							</ul>
+							<p>Atkreipkite dėmesį, kad žymuo rašomas tarp <code>${table:altas.</code> ir <code>}</code> simbolių.</p>
+						</div>
 					</div>
 					<div class="modal-footer">
 						<div id="CNITFileWarning">Klaida: Tipas neturi priskirto CNIT šablono failo!</div>

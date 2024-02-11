@@ -428,6 +428,17 @@ class ApiController
 		});
 	}
 
+	GenerateCNIT(typeId, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/generateCNIT/" + typeId,
+			type: "POST",
+			dataType: "json",
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	UpdateSchemaNecessity(schemaDataId, necessity, callback)
 	{
 		$.ajax({

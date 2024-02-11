@@ -1084,6 +1084,9 @@ function GetAllCombinations(typeId, callback)
 
 function ShowGenerateCoCModal()
 {
+	if ($('#dataCollapse').hasClass('show'))
+		$('#dataCollapse').removeClass('show');
+
 	$('#cocGenerateModal').modal('show');
 	API.GetAllTypes(response => {
 		$('#cocTypeSelect').html('');
@@ -1166,13 +1169,24 @@ function ShowGenerateCNITModal()
 					$('#cnitGenerateButton').attr('disabled', true);
 				} else {
 					$('#CNITFileWarning').hide();
-					$('#cnitGenerateButton').attr('disabled', true );
+					$('#cnitGenerateButton').attr('disabled', false );
+					$('#cnitGenerateButton').attr('onclick', `GenerateCNIT(${this.value})`);
 				}
 			});
 		}).trigger('change');
 	});
 }
 
+function GenerateCNIT(typeId)
+{
+	API.GenerateCNIT(typeId, response => {
+		if (response.error == undefined)
+		{
+			window.open("/files/temporary/" + response.fileName, "_blank");
+		}
+		$('#cnitGenerateModal').modal('hide');
+	});
+}
 
 function CreateSchemaField()
 {
@@ -1627,6 +1641,18 @@ function CollectPlaceholderData(mainCallback)
 	}
 }
 
+function combinationExists(combinations, targetCombination) {
+	return combinations.some(combination => {
+		// Check if variant arrays are equal
+		const variantsMatch = compareArrays(combination.variant, targetCombination.variant);
+		// Check if version arrays are equal
+		const versionsMatch = compareArrays(combination.version, targetCombination.version);
+
+		// If both variants and versions match, the combination exists
+		return variantsMatch && versionsMatch;
+	});
+}
+
 const compareArrays = (a, b) => {
 	if (a.length !== b.length) return false;
 	else {
@@ -1639,18 +1665,6 @@ const compareArrays = (a, b) => {
 	  return true;
 	}
 };
-
-function combinationExists(combinations, targetCombination) {
-	return combinations.some(combination => {
-		// Check if variant arrays are equal
-		const variantsMatch = compareArrays(combination.variant, targetCombination.variant);
-		// Check if version arrays are equal
-		const versionsMatch = compareArrays(combination.version, targetCombination.version);
-
-		// If both variants and versions match, the combination exists
-		return variantsMatch && versionsMatch;
-	});
-}
 
 function GenerateCoC()
 {
@@ -1665,7 +1679,7 @@ function GenerateCoC()
 			API.GenerateCoC(typeId, placeholderData, (response) => {
 				if (response.error == undefined)
 				{
-					window.open("/files/" + response.fileName, "_blank");
+					window.open("/files/temporary/" + response.fileName, "_blank");
 				}
 			});
 		});
