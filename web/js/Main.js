@@ -1156,6 +1156,8 @@ function ShowGenerateCoCModal()
 function ShowGenerateCNITModal()
 {
 	$('#cnitGenerateModal').modal('show');
+	$('#cnitSpinner').hide();
+	$('#cnitButtonText').text('Generuoti');
 	API.GetAllTypes(response => {
 		$('#cnitTypeSelect').html('');
 		response.forEach(type => {
@@ -1179,6 +1181,9 @@ function ShowGenerateCNITModal()
 
 function GenerateCNIT(typeId)
 {
+	$('#cnitSpinner').show();
+	$('#cnitGenerateButton').attr('disabled', true);
+	$('#cnitButtonText').text('Generuojama...');
 	API.GenerateCNIT(typeId, response => {
 		if (response.error == undefined)
 		{

@@ -1036,7 +1036,10 @@
 					<div class="modal-footer">
 						<div id="CNITFileWarning">Klaida: Tipas neturi priskirto CNIT šablono failo!</div>
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
-						<button type="button" class="btn btn-primary" id="cnitGenerateButton" onclick="GenerateCNIT()">Generuoti</button>
+						<button type="button" class="btn btn-primary" id="cnitGenerateButton" onclick="GenerateCNIT()">
+							<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="cnitSpinner" style="display: none;"></span>
+							<div id="cnitButtonText" style="display: inline-block;">Generuoti</div>
+						</button>
 					</div>
 				</div>
 			</div>
