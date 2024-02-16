@@ -1,0 +1,18 @@
+<nav class="navbar">
+	<a class="navbar-brand">
+		<img src="img/logo.png" alt="Logo">
+	</a>
+	<div class="generationButtons">
+		<button class="btn btn-sm btn-light" type="button" onClick="ShowGenerateCoCModal()">
+			Generuoti CoC failą
+		</button>
+		<button class="btn btn-sm btn-light" type="button" onClick="ShowGenerateCNITModal()">
+			Generuoti CNIT failą
+		</button>
+	</div>
+</nav>
+
+<%- include('modals/generateCNIT') %>
+<%- include('modals/generateCoC') %>
+
+<script src="js/controllers/GeneratorController.js"></script>

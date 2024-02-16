@@ -1,0 +1,141 @@
+<div class="modal fade" id="editTypeModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Tipo redagavimas</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="editTypeForm" novalidate>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="editTypeName" placeholder="Tipas" required >
+								<label for="typeName">Tipas</label>
+							</div>
+						</div>
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="editTypeCode" placeholder="Patvirtinimo numeris" required >
+								<label for="editTypeCode">Patvirtinimo numeris</label>
+							</div>
+						</div> 
+					</div>
+					<div class="row">
+						<div class="col" style="margin-bottom: 10px;">
+							<label>CoC failo šablonas:</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="mb-3">
+								<input class="form-control" type="file" id="editCocFile" accept=".docx">
+							</div>
+						</div>
+						<div class="col">
+							<label id="editCoCFileLabel" style="margin-right: 16px;"></label>
+							<button type="button" class="btn btn-danger" id="CoCDeleteButton" onclick="DeleteCoCFile()">Ištrinti failą</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col" style="margin-bottom: 10px;">
+							<label>CNIT failo šablonas:</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="mb-3">
+								<input class="form-control" type="file" id="editCNITFile" accept=".xlsx">
+							</div>
+						</div>
+						<div class="col">
+							<label id="editCNITFileLabel" style="margin-right: 16px;"></label>
+							<button type="button" class="btn btn-danger" id="CNITDeleteButton" onclick="DeleteCNITFile()">Ištrinti failą</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<h5>Variantas</h5>
+						</div>
+						<div class="col">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" value="" id="editTypeVariant">
+								<label class="form-check-label" for="flexCheckDefault">
+									Redaguoti variantų matricos struktūrą
+								</label>
+							</div>
+						</div>
+						<div id="editTypeVariantMatrix" style="overflow-x: auto; padding-top: 3px;"></div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<h5>Versija</h5>
+						</div>
+						<div class="col">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" value="" id="editTypeVersion">
+								<label class="form-check-label" for="flexCheckDefault">
+									Redaguoti versijų matricos struktūrą
+								</label>
+							</div>
+						</div>
+						<div id="editTypeVersionMatrix" style="overflow-x: auto; padding-top: 3px;"></div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<h5>Matricos struktūros redagavimas</h5>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-auto" style="width: 150px;">
+							<label class="col-form-label">Pašalinti stulpelį:</label>
+						</div>
+						<div class="col-auto">
+							<input type="number" class="form-control" id="removeColumn" min="0" step="1" disabled>
+						</div>
+						<div class="col-auto">
+							<button type="button" class="btn btn-danger mb-3" id="removeColumnSubmit" disabled>Vykdyti</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-auto" style="width: 150px;">
+							<label class="col-form-label">Pridėti stulpelį:</label>
+						</div>
+						<div class="col-auto">
+							<input type="number" class="form-control" id="addColumn" min="0" step="1" disabled>
+						</div>
+						<div class="col-auto">
+							<button type="button" class="btn btn-warning mb-3" id="addColumnSubmit" disabled>Vykdyti</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-auto" style="width: 150px;">
+							<label class="col-form-label">Pašalinti eilutę:</label>
+						</div>
+						<div class="col-auto">
+							<input type="number" class="form-control" id="removeRow" min="0" step="1" disabled>
+						</div>
+						<div class="col-auto">
+							<button type="button" class="btn btn-danger mb-3" id="removeRowSubmit" disabled>Vykdyti</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-auto" style="width: 150px;">
+							<label class="col-form-label">Pridėti eilutę:</label>
+						</div>
+						<div class="col-auto">
+							<input type="number" class="form-control" id="addRow" min="0" step="1" disabled>
+						</div>
+						<div class="col-auto">
+							<button type="button" class="btn btn-warning mb-3" id="addRowSubmit" disabled>Vykdyti</button>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+				<button type="button" class="btn btn-primary" onclick="EditType()">Išsaugoti</button>
+			</div>
+		</div>
+	</div>
+</div>

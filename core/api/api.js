@@ -3,6 +3,7 @@ const { ApiUtils } = require('./apiUtils');
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './data/files/')
@@ -26,7 +27,16 @@ class API{
 		this.app = express();
 		this.app.use(express.static('web'));
 		this.app.use(express.json());
-		
+		this.app.set('views', path.join(process.cwd(), 'core/views'));
+		this.app.set('view engine', 'ejs');
+
+		this.app.get('/', function(req, res){
+			res.render('index', {
+				hello: 'Hello World',
+				foo: 'bar'
+			});
+		});
+
 		this.typeController = require('./controllers/typeController')(logger, database, this.utils );
 		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );

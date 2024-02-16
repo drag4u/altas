@@ -1,0 +1,32 @@
+<div class="modal fade" id="createSchemaCombinationDataModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Kombinacijos duomenų įvedimas</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="schemaCombinationDataForm" novalidate>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="schemaCombinationPlaceholder" placeholder="Žymuo" required >
+								<label for="schemaCombinationPlaceholder">Žymuo</label>
+							</div>
+						</div>
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="schemaCombinationDataName" placeholder="Duomenys" required >
+								<label for="schemaCombinationDataName">Duomenys</label>
+							</div>
+						</div> 
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+				<button type="button" class="btn btn-primary" id="createSchemaCombinationDataSubmit" onclick="CreateSchemaCombinationData()">Kurti</button>
+			</div>
+		</div>
+	</div>
+</div>

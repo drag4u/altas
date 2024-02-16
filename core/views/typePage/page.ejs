@@ -1,0 +1,38 @@
+<div class="container" id="typePage">
+	<div class="row">
+		<div class="col float-start">
+			<h2>Tipų sąrašas</h2>
+		</div>
+		<div class="col">
+			<button id="typeCreateButton" class="btn btn-sm btn-success float-end" onClick="ShowTypeCreateModal()">
+				Sukurti naują tipą
+			</button>
+		</div>
+	</div>
+	<table class="table table-striped table-hover">
+		<thead class="table-dark">
+			<tr>
+				<th scope="col">ID</th>
+				<th scope="col">Tipas</th>
+				<th scope="col">Patvirtinimo numeris</th>
+				<th scope="col">Variantas</th>
+				<th scope="col">Versija</th>
+				<th scope="col">CoC šablonas</th>
+				<th scope="col">CNIT šablonas</th>
+				<th scope="col">Kombinacijos</th>
+				<th scope="col">Komandos</th>
+			</tr>
+		</thead>
+		<tbody id="typeTable"></tbody>
+	</table>
+	<div id ="typeTableWarning" style="text-align: center; color: grey;">
+		<h3>Sąrašas tuščias</h3>
+	</div>
+</div>
+<%- include('modals/copyType') %>
+<%- include('modals/createType') %>
+<%- include('modals/editType') %>
+<%- include('modals/deleteType') %>
+
+<script src="js/controllers/TypeController.js"></script>
+<script src="js/controllers/TypeMatrixEdit.js"></script> 

@@ -1,0 +1,74 @@
+<div class="modal fade" id="createTypeModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Naujo tipo kūrimas</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="typeForm" novalidate>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="typeName" placeholder="Tipas" required >
+								<label for="typeName">Tipas</label>
+							</div>
+						</div>
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="typeCode" placeholder="Patvirtinimo numeris" required >
+								<label for="typeCode">Patvirtinimo numeris</label>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="number" class="form-control" id="versionColumnAmount" placeholder="10" required min="1">
+								<label for="versionColumnAmount">Versijos stulpelių kiekis</label>
+							</div>
+						</div>
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="number" class="form-control" id="versionRowAmount" placeholder="5" required min="1">
+								<label for="versionRowAmount">Versijos eilučių kiekis</label>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="number" class="form-control" id="variantColumnAmount" placeholder="10" required min="1">
+								<label for="variantColumnAmount">Varijanto stulpelių kiekis</label>
+							</div>
+						</div>
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="number" class="form-control" id="variantRowAmount" placeholder="5" required min="1">
+								<label for="variantRowAmount">Varijanto eilučių kiekis</label>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="mb-3">
+								<label for="cocFile" class="form-label">CoC failo šablonas:</label>
+								<input class="form-control" type="file" id="cocFile" accept=".docx, .xlsx">
+							</div>
+						</div>
+						<div class="col">
+							<div class="mb-3">
+								<label for="cnitFile" class="form-label">CNIT failo šablonas:</label>
+								<input class="form-control" type="file" id="cnitFile" accept=".xlsx">
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+				<button type="button" class="btn btn-primary" onclick="CreateType()">Sukurti naują tipą</button>
+			</div>
+		</div>
+	</div>
+</div>

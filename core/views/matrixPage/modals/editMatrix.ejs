@@ -1,0 +1,26 @@
+<div class="modal fade" id="editMatrixModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Matricos redagavimas</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Atšaukti"></button>
+			</div>
+			<div class="modal-body">
+				<form id="editMatrixForm" novalidate>
+					<div class="row">
+						<h5>Variantas</h5>
+						<div id="editVariantMatrix" style="overflow-x: auto"></div>
+					</div>
+					<div class="row">
+						<h5>Versija</h5>
+						<div id="editVersionMatrix" style="overflow-x: auto"></div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+				<button type="button" class="btn btn-primary" onclick="EditMatrix()">Išsaugoti</button>
+			</div>
+		</div>
+	</div>
+</div>

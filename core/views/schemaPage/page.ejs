@@ -1,0 +1,162 @@
+<div id="schemaPage" style="display: none;">
+	<div style="margin: 0px 10px;">
+		<div class="row" style="width: 99%;">
+			<div class="col float-start">
+				<h2 id="schemaHeader">Tipo "test" schema</h2>
+			</div>
+			<div class="col-md-auto">
+				<button type="button" class="btn btn-sm btn-secondary float-end" style="margin-top: 6px; margin-right: 6px;" onclick="ShowTypePage()">
+					Grįžti į tipų sąrašą
+				</button>
+			</div>
+		</div>
+	</div>
+	<div class="container" style="min-width: 100%;">
+		<div>
+			<h4>Variantų matricos schema</h4>
+		</div>
+		<div class="row">
+			<div class="container" id="schemaVariantContainer">
+				<table class="table table-striped table-hover">
+					<thead class="table-dark" id="schemaVariantMatrixHead">
+						<tr></tr>
+					</thead>
+					<tbody id="schemaVariantMatrixBody"></tbody>
+				</table>
+			</div>
+		</div>
+		<div class="row">
+			<h4>Versijų matricos schema</h4>
+		</div>
+		<div class="row">
+			<div class="container" id="schemaVersionContainer">
+				<table class="table table-striped table-hover">
+					<thead class="table-dark" id="schemaVersionMatrixHead">
+						<tr></tr>
+					</thead>
+					<tbody id="schemaVersionMatrixBody"></tbody>
+				</table>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+				<h4>Įvesties laukeliai</h4>
+			</div>
+			<div class="col">
+				<button type="button" class="btn btn-sm btn-success float-end" onclick="ShowSchemaFieldModal()">
+					Pridėti laukelį
+				</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="container">
+				<table class="table table-striped table-hover">
+					<thead class="table-dark">
+						<tr>
+							<th>Laukelio pavadinimas</th>
+							<th>Žymuo</th>
+							<th style="width: 300px;">Komandos</th>
+						</tr>
+					</thead>
+					<tbody id="schemaFieldBody">
+						<tr>
+							<td>Laukelio pavadinimas</td>
+							<td>Žymuo</td>
+							<td>Komandos</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+				<h4>Žymenų kombinacijos</h4>
+			</div>
+			<div class="col">
+				<button type="button" class="btn btn-sm btn-success float-end" onclick="ShowSchemaCombinationModal()">
+					Pridėti kombinaciją
+				</button>
+			</div>
+		</div>
+		<div class="row">
+			<div class="container">
+				<table class="table table-striped table-hover">
+					<thead class="table-dark">
+						<tr>
+							<th>Kombinacijos Pavadinimas</th>
+							<th>Žymuo</th>
+							<th>Duomenys</th>
+							<th style="width: 360px;">Komandos</th>
+						</tr>
+					</thead>
+					<tbody id="schemaCombinationsBody">
+						<tr>
+							<td>Laukelio pavadinimas</td>
+							<td>5</td>
+							<td>Komandos</td>
+							<td>Komandos</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+				<h4>Universalūs žymenys</h4>
+			</div>
+		</div>
+		<div class="row">
+			<div class="container">
+				<table class="table table-striped table-hover">
+					<thead class="table-dark">
+						<tr>
+							<th>žymuo</th>
+							<th>Duomenys</th>
+							<th>Pavyzdys</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>${typeNumber}</td>
+							<td>Tipo patvirtinimo numeris</td>
+							<td>e1*2007/46*1630*06</td>
+						</tr>
+						<tr>
+							<td>${type}</td>
+							<td>Tipas</td>
+							<td>906M2</td>
+						</tr>
+						<tr>
+							<td>${variant}</td>
+							<td>Kombinacijos varianto dalis</td>
+							<td>SYDD8DDAWAU2</td>
+						</tr>
+						<tr>
+							<td>${version}</td>
+							<td>Kombinacijos versijos dalis</td>
+							<td>NM500VSHA8DR001687MP0D2E0MAN</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<%- include('modals/combinations/data/copy') %>
+<%- include('modals/combinations/data/create') %>
+<%- include('modals/combinations/data/delete') %>
+<%- include('modals/combinations/data/edit') %>
+
+<%- include('modals/combinations/copyCombination') %>
+<%- include('modals/combinations/deleteCombination') %>
+<%- include('modals/combinations/createCombination') %>
+<%- include('modals/combinations/editCombination') %>
+
+<%- include('modals/fields/createField') %>
+<%- include('modals/fields/deleteField') %>
+<%- include('modals/fields/editField') %>
+
+<%- include('modals/editSchema') %>
+
+<script src="js/controllers/SchemaController.js"></script>

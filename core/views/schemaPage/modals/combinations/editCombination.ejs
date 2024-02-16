@@ -1,0 +1,35 @@
+<div class="modal fade" id="editSchemaCombinationModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5">Žymenų kombinacijos redagavimas</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Atšaukti"></button>
+			</div>
+			<div class="modal-body">
+				<form id="schemaCombinationEditingForm" novalidate>
+					<div class="row">
+						<div class="col">
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="schemaEditCombinationName" placeholder="Kombinacijos pavadinimas" required >
+								<label for="schemaEditCombinationName">Kombinacijos pavadinimas</label>
+							</div>
+						</div>
+					</div>
+				</form>
+				<label style="margin-top: 10px;" for="basic-url" class="form-label">Variantas:</label>
+				<div style="width: 100%; overflow-x: auto; padding-bottom: 6px;">
+					<div id="editSchemaCombinationVariantSelects"></div>
+				</div>
+				<label style="margin-top: 10px;" for="basic-url" class="form-label">Versija:</label>
+				<div style="width: 100%; overflow-x: auto; padding-bottom: 6px;">
+					<div id="editSchemaCombinationVersionSelects"></div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div id="editCombinationError" style="display: none;">Klaida</div>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+				<button type="button" class="btn btn-primary" onclick="EditSchemaCombination()">Išsaugoti</button>
+			</div>
+		</div>
+	</div>
+</div>

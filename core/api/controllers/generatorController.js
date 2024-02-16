@@ -187,66 +187,6 @@ function ReplaceOrderedDataWithSchemaValues(orderedData, schemaValues)
     });
 }
 
-function generateCombinations(matrixData) {
-    // Determine the highest column index for versions and variants
-    let maxVersionColumn = 0;
-    let maxVariantColumn = 0;
-
-    matrixData.forEach(item => {
-        if (item.version_variant === 0) {
-            maxVersionColumn = Math.max(maxVersionColumn, item.column);
-        } else if (item.version_variant === 1) {
-            maxVariantColumn = Math.max(maxVariantColumn, item.column);
-        }
-    });
-
-    // Initialize arrays to hold values for each column
-    let versionValues = Array.from({ length: maxVersionColumn + 1 }, () => new Set());
-    let variantValues = Array.from({ length: maxVariantColumn + 1 }, () => new Set());
-
-    // Populate the Sets with values from matrixData
-    matrixData.forEach(item => {
-        if (item.version_variant === 0 && item.value !== '') {
-            versionValues[item.column].add(item.value);
-        } else if (item.version_variant === 1 && item.value !== '') {
-            variantValues[item.column].add(item.value);
-        }
-    });
-
-    // Convert Sets to Arrays for easier manipulation
-    versionValues = versionValues.map(set => Array.from(set));
-    variantValues = variantValues.map(set => Array.from(set));
-
-    // Generate all combinations for versions and variants
-    const versionCombinations = generateAllCombinations(versionValues);
-    const variantCombinations = generateAllCombinations(variantValues);
-
-    // Combine version and variant combinations into the result array
-    const result = variantCombinations.map(variantCombo => {
-        return versionCombinations.map(versionCombo => ({
-            variant: variantCombo,
-            version: versionCombo
-        }));
-    }).flat();
-
-    return result;
-}
-
-// Recursive function to generate all combinations
-function generateAllCombinations(valuesArrays, index = 0, result = [], current = []) {
-    if (index === valuesArrays.length) {
-        result.push([...current]);
-        return;
-    }
-
-    for (let value of valuesArrays[index]) {
-        current[index] = value;
-        generateAllCombinations(valuesArrays, index + 1, result, current);
-    }
-
-    if (index === 0) return result;
-}
-
 function OrderMatricData(matrixRows)
 {
 	const rowData = {};
@@ -334,4 +274,63 @@ function generateRandomString(length) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
+}
+
+function generateCombinations(matrixData) {
+    // Determine the highest column index for versions and variants
+    let maxVersionColumn = 0;
+    let maxVariantColumn = 0;
+
+    matrixData.forEach(item => {
+        if (item.version_variant === 0) {
+            maxVersionColumn = Math.max(maxVersionColumn, item.column);
+        } else if (item.version_variant === 1) {
+            maxVariantColumn = Math.max(maxVariantColumn, item.column);
+        }
+    });
+
+    // Initialize arrays to hold values for each column
+    let versionValues = Array.from({ length: maxVersionColumn + 1 }, () => new Set());
+    let variantValues = Array.from({ length: maxVariantColumn + 1 }, () => new Set());
+
+    // Populate the Sets with values from matrixData
+    matrixData.forEach(item => {
+        if (item.version_variant === 0 && item.value !== '') {
+            versionValues[item.column].add(item.value);
+        } else if (item.version_variant === 1 && item.value !== '') {
+            variantValues[item.column].add(item.value);
+        }
+    });
+
+    // Convert Sets to Arrays for easier manipulation
+    versionValues = versionValues.map(set => Array.from(set));
+    variantValues = variantValues.map(set => Array.from(set));
+
+    // Generate all combinations for versions and variants
+    const versionCombinations = generateAllCombinations(versionValues);
+    const variantCombinations = generateAllCombinations(variantValues);
+
+    // Combine version and variant combinations into the result array
+    const result = variantCombinations.map(variantCombo => {
+        return versionCombinations.map(versionCombo => ({
+            variant: variantCombo,
+            version: versionCombo
+        }));
+    }).flat();
+
+    return result;
+}
+
+function generateAllCombinations(valuesArrays, index = 0, result = [], current = []) {
+    if (index === valuesArrays.length) {
+        result.push([...current]);
+        return;
+    }
+
+    for (let value of valuesArrays[index]) {
+        current[index] = value;
+        generateAllCombinations(valuesArrays, index + 1, result, current);
+    }
+
+    if (index === 0) return result;
 }

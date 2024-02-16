@@ -1,0 +1,50 @@
+.matrixInput {
+	min-width: 36px;
+	font-size: 12px;
+	vertical-align: top;
+	line-height: 14px;
+	text-align: center;
+	margin: 6px;
+	color: black;
+	box-shadow: inset 0 0 0 1px #f0f0f0;
+	background-color: #d6d6d6;
+	padding: 2px 4px;
+}
+.matrixInputRow {
+	height: 18px;
+}
+.customSelect {
+	display: inline-block;
+	width: 84px;
+	margin-right: 6px;
+}
+#CoCFileWarning, #CNITFileWarning, #newCombinationError, #editCombinationError {
+	position: absolute;
+	left: 10px;
+	color: #ff1b00;
+	font-weight: bold;
+}
+html, body
+{
+	background: #d6d6d6;
+}
+.navbar
+{
+	background-color: #212529;
+}
+.navbar img
+{
+	width: 160px;
+}
+.generationButtons
+{
+	margin-right: 12px;
+}
+#typePage
+{
+	min-width: 100%;
+}
+#typeCreateButton
+{
+	margin-top: 8px;
+}
