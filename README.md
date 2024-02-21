@@ -4,13 +4,15 @@ Serviso diegimas:
 
 Failo turinys:
 
-```[Unit]
+```
+[Unit]
 Description=Altas Node
 
 [Service]
 Environment=NODE_OPTIONS=--max-old-space-size=6144
 ExecStart=/usr/bin/node /var/www/altas/index.js
 Restart=on-failure
+WorkingDirectory=/var/www/altas
 
 [Install]
 WantedBy=multi-user.target
