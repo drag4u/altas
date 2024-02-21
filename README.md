@@ -9,8 +9,7 @@ Failo turinys:
 Description=Altas Node
 
 [Service]
-Environment=NODE_OPTIONS=--max-old-space-size=6144
-ExecStart=/usr/bin/node /var/www/altas/index.js
+ExecStart=/bin/bash -c "NODE_OPTIONS=--max-old-space-size=6144 /usr/bin/node /var/www/altas/index.js"
 Restart=on-failure
 WorkingDirectory=/var/www/altas
 
