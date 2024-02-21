@@ -67,6 +67,7 @@ module.exports = (logger, database, utils) => {
                                 schemaValuesQuery = `select * from schema_values where type_id = ${utils.Esc(typeId)}`;
                                 utils.ExecuteAction(res, schemaValuesQuery, schemaValues => {
                                     GetAllCombinations(matrixRows, schemaValues, allCombinations => {
+                                        logger.info('All combinations:', allCombinations.length);
                                         FormPlaceholderData(allCombinations, schemaDataValues, combinationSequences, combinationData, typeData[0], schemaValues, placeholderData => {
                                             ProceedWithCNIT(placeholderData, fileName, res);
                                         });
