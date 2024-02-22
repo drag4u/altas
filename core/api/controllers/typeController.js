@@ -56,7 +56,7 @@ module.exports = (logger, database, utils) => {
 						let schemaFieldQuery = 'SELECT * FROM schema_fields WHERE type_id = ' + utils.Esc(id);
 						utils.ExecuteAction(res, schemaFieldQuery, schemaFieldRows => {
 							if (schemaFieldRows.length == 0) {
-								Continue();
+								Continue1();
 							} else {
 								let newSchemaFieldQuery = 'INSERT INTO schema_fields (type_id, field_name, field_placeholder) VALUES ';
 								schemaFieldRows.forEach(row => {
@@ -65,12 +65,68 @@ module.exports = (logger, database, utils) => {
 								newSchemaFieldQuery = newSchemaFieldQuery.slice(0, -2);
 								newSchemaFieldQuery += ';';
 								utils.ExecuteAction(res, newSchemaFieldQuery, () => {
-									Continue();
+									Continue1();
 								});
 							}
 						});
 
-						function Continue()
+						function Continue1()
+						{
+							// Copy schema combinations, schema combination sequences and schema combination data
+							let schemaCombinationQuery = 'SELECT * FROM schema_combination WHERE type_id = ' + utils.Esc(id);
+							utils.ExecuteAction(res, schemaCombinationQuery, schemaCombinationRows => {
+								if (schemaCombinationRows.length == 0) {
+									Continue2();
+								} else {
+									let newSchemaCombinationQuery = 'INSERT INTO schema_combination (type_id, combination_name) VALUES ';
+									schemaCombinationRows.forEach(row => {
+										newSchemaCombinationQuery += `(${utils.Esc(newTypeId)}, '${utils.Esc(row.combination_name)}'), `;
+									});
+									newSchemaCombinationQuery = newSchemaCombinationQuery.slice(0, -2);
+									newSchemaCombinationQuery += ';';
+									utils.ExecuteAction(res, newSchemaCombinationQuery, () => {
+										// copy combination sequences to new combinations
+										let newSchemaCombinationQuery = 'SELECT * FROM schema_combination WHERE type_id = ' + utils.Esc(newTypeId);
+										utils.ExecuteAction(res, newSchemaCombinationQuery, newSchemaCombinationRows => {
+											let newSchemaCombinationIdArray = [];
+											newSchemaCombinationRows.forEach(row => {
+												newSchemaCombinationIdArray.push(row.schema_combination_id);
+											});
+											let oldSchemaCombinationIdArray = [];
+											schemaCombinationRows.forEach(row => {
+												oldSchemaCombinationIdArray.push(row.schema_combination_id);
+											});
+											let schemaCombinationSequenceQuery = 'SELECT * FROM schema_combination_sequence WHERE schema_combination_id IN (' + oldSchemaCombinationIdArray.join(',') + ')';
+											utils.ExecuteAction(res, schemaCombinationSequenceQuery, schemaCombinationSequenceRows => {
+												let newSchemaCombinationSequenceQuery = 'INSERT INTO schema_combination_sequence (schema_combination_id, schema_value_id) VALUES ';
+												schemaCombinationSequenceRows.forEach(row => {
+													newSchemaCombinationSequenceQuery += `('${utils.Esc(newSchemaCombinationIdArray[oldSchemaCombinationIdArray.indexOf(row.schema_combination_id)] )}', '${utils.Esc(row.schema_value_id)}'), `;
+												});
+												newSchemaCombinationSequenceQuery = newSchemaCombinationSequenceQuery.slice(0, -2);
+												newSchemaCombinationSequenceQuery += ';';
+												utils.ExecuteAction(res, newSchemaCombinationSequenceQuery, () => {
+													// copy combination data to new combinations
+													let schemaCombinationDataQuery = 'SELECT * FROM schema_combination_data WHERE schema_combination_id IN (' + oldSchemaCombinationIdArray.join(',') + ')';
+													utils.ExecuteAction(res, schemaCombinationDataQuery, schemaCombinationDataRows => {
+														let newSchemaCombinationDataQuery = 'INSERT INTO schema_combination_data (schema_combination_id, field_name, field_placeholder) VALUES ';
+														schemaCombinationDataRows.forEach(row => {
+															newSchemaCombinationDataQuery += `(${utils.Esc(newSchemaCombinationIdArray[oldSchemaCombinationIdArray.indexOf(row.schema_combination_id)] )}, '${utils.Esc(row.field_name)}', '${utils.Esc(row.field_placeholder)}'), `;
+														});
+														newSchemaCombinationDataQuery = newSchemaCombinationDataQuery.slice(0, -2);
+														newSchemaCombinationDataQuery += ';';
+														utils.ExecuteAction(res, newSchemaCombinationDataQuery, () => {
+															Continue2();
+														});
+													});
+												});
+											});
+										});
+									});
+								}
+							});
+						}
+
+						function Continue2()
 						{
 							let matricesQuery = `SELECT * FROM matrix WHERE type_id = ${utils.Esc(id)}`;
 							utils.ExecuteAction(res, matricesQuery, existingTypeMatrices => {

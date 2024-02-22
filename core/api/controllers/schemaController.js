@@ -203,7 +203,7 @@ module.exports = (logger, database, utils) => {
 						}));
 					}
 					Promise.all(promises).then(() => {
-						res.status(200).json(combinations);
+						res.status(200).json(combinations.sort((a, b) => a.schema_combination_id - b.schema_combination_id));
 					});
 				});
 			});
