@@ -1,5 +1,6 @@
 const { ApiUtils } = require('./apiUtils');
 const TypeController = require('./controllers/typeController')
+const FileController = require('./controllers/fileController');
 
 const express = require('express');
 const multer = require('multer');
@@ -36,7 +37,7 @@ class API{
 		});
 
 		this.typeController = new TypeController(this.utils);
-		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
+		this.fileController = new FileController(this.utils);
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
 		this.schemaController = require('./controllers/schemaController')(logger, database, this.utils );
 		this.generatorController = require('./controllers/generatorController')(logger, database, this.utils );
@@ -59,8 +60,8 @@ class API{
 		this.app.post('/type/removeRow/:typeId/:versionVariant/:rowId', this.typeController.removeRow.bind(this.typeController));
 		this.app.post('/type/addRow/:typeId/:versionVariant/:rowId', this.typeController.addRow.bind(this.typeController));
 
-		this.app.get('/files/:filename', this.fileController.getFile);
-		this.app.get('/files/temporary/:filename', this.fileController.getTemporaryFile);
+		this.app.get('/files/:filename', this.fileController.getFile.bind(this.fileController));
+		this.app.get('/files/temporary/:filename', this.fileController.getTemporaryFile.bind(this.fileController));
 
 		this.app.get('/matrix/all/:id', this.matrixController.getAllMatrices);
 		this.app.get('/matrix/:id', this.matrixController.getMatrix);
