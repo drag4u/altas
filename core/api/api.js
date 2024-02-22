@@ -1,4 +1,5 @@
 const { ApiUtils } = require('./apiUtils');
+const TypeController = require('./controllers/typeController')
 
 const express = require('express');
 const multer = require('multer');
@@ -31,13 +32,10 @@ class API{
 		this.app.set('view engine', 'ejs');
 
 		this.app.get('/', function(req, res){
-			res.render('index', {
-				hello: 'Hello World',
-				foo: 'bar'
-			});
+			res.render('index');
 		});
 
-		this.typeController = require('./controllers/typeController')(logger, database, this.utils );
+		this.typeController = new TypeController(this.utils);
 		this.fileController = require('./controllers/fileController')(logger, database, this.utils );
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
 		this.schemaController = require('./controllers/schemaController')(logger, database, this.utils );
@@ -47,19 +45,19 @@ class API{
 	}
 
 	InitializeEndpoints(){
-		this.app.get('/type/all', this.typeController.getAllTypes);
-		this.app.post('/type/create', upload.fields([{ name: 'cocFile', maxCount: 1 }, { name: 'cnitFile', maxCount: 1 }]), this.typeController.createType);
-		this.app.post('/type/edit/:id', upload.fields([{ name: 'editCocFile', maxCount: 1 }, { name: 'editCNITFile', maxCount: 1 }]), this.typeController.editType);
-		this.app.post('/type/copy/:id', this.typeController.copyType);
-		this.app.post('/type/removeCoC/:id', this.typeController.removeCoCFile);
-		this.app.post('/type/removeCNIT/:id', this.typeController.removeCNITFile);
-		this.app.get('/type/:id', this.typeController.fetchType);
-		this.app.post('/type/update', this.typeController.updateType);
-		this.app.delete('/type/:id', this.typeController.deleteType);
-		this.app.post('/type/removeColumn/:typeId/:versionVariant/:columnId', this.typeController.removeColumn);
-		this.app.post('/type/addColumn/:typeId/:versionVariant/:columnId', this.typeController.addColumn);
-		this.app.post('/type/removeRow/:typeId/:versionVariant/:rowId', this.typeController.removeRow);
-		this.app.post('/type/addRow/:typeId/:versionVariant/:rowId', this.typeController.addRow);
+		this.app.get('/type/all', this.typeController.getAllTypes.bind(this.typeController));
+		this.app.post('/type/create', upload.fields([{ name: 'cocFile', maxCount: 1 }, { name: 'cnitFile', maxCount: 1 }]), this.typeController.createType.bind(this.typeController));
+		this.app.post('/type/edit/:id', upload.fields([{ name: 'editCocFile', maxCount: 1 }, { name: 'editCNITFile', maxCount: 1 }]), this.typeController.editType.bind(this.typeController));
+		this.app.post('/type/copy/:id', this.typeController.copyType.bind(this.typeController));
+		this.app.post('/type/removeCoC/:id', this.typeController.removeCoCFile.bind(this.typeController));
+		this.app.post('/type/removeCNIT/:id', this.typeController.removeCNITFile.bind(this.typeController));
+		this.app.get('/type/:id', this.typeController.fetchType.bind(this.typeController));
+		this.app.post('/type/update', this.typeController.updateType.bind(this.typeController));
+		this.app.delete('/type/:id', this.typeController.deleteType.bind(this.typeController));
+		this.app.post('/type/removeColumn/:typeId/:versionVariant/:columnId', this.typeController.removeColumn.bind(this.typeController));
+		this.app.post('/type/addColumn/:typeId/:versionVariant/:columnId', this.typeController.addColumn.bind(this.typeController));
+		this.app.post('/type/removeRow/:typeId/:versionVariant/:rowId', this.typeController.removeRow.bind(this.typeController));
+		this.app.post('/type/addRow/:typeId/:versionVariant/:rowId', this.typeController.addRow.bind(this.typeController));
 
 		this.app.get('/files/:filename', this.fileController.getFile);
 		this.app.get('/files/temporary/:filename', this.fileController.getTemporaryFile);
