@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-module.exports = async function getAllTypes(req, res, utils) {
+module.exports = async function (req, res, utils) {
     logger.info("Fetching a file");
 	const filename = req.params.filename;
 	const fileDirectory = './data/files/';

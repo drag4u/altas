@@ -1,6 +1,7 @@
 const { ApiUtils } = require('./apiUtils');
 const TypeController = require('./controllers/typeController')
 const FileController = require('./controllers/fileController');
+const SchemaController = require('./controllers/schemaController');
 
 const express = require('express');
 const multer = require('multer');
@@ -39,7 +40,7 @@ class API{
 		this.typeController = new TypeController(this.utils);
 		this.fileController = new FileController(this.utils);
 		this.matrixController = require('./controllers/matrixController')(logger, database, this.utils );
-		this.schemaController = require('./controllers/schemaController')(logger, database, this.utils );
+		this.schemaController = new SchemaController(this.utils);
 		this.generatorController = require('./controllers/generatorController')(logger, database, this.utils );
 		this.InitializeEndpoints();
 		this.app.listen(port, () => this.logger.info('Server has started on port: ' + port));
@@ -70,27 +71,27 @@ class API{
 		this.app.post('/matrix/edit/:id', this.matrixController.editMatrix);
 		this.app.post('/matrix/copy/:typeId/:matrixId', this.matrixController.copyMatrix);
 
-		this.app.get('/schema/:typeId', this.schemaController.getSchema);
-		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData);
-		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData);
-		this.app.post('/schema/createCombination/:typeId', this.schemaController.createCombination);
-		this.app.post('/schema/editCombination/:combinationId', this.schemaController.editCombination);
-		this.app.post('/schema/copyCombination/:combinationId', this.schemaController.copyCombination);
-		this.app.post('/schema/createCombinationData/:combinationId', this.schemaController.createCombinationData);
-		this.app.post('/schema/copyCombinationData/:combinationDataId', this.schemaController.copyCombinationData);
-		this.app.get('/schema/combinationData/:combinationDataId', this.schemaController.getCombinationData);
-		this.app.post('/schema/combinationData/:combinationDataId', this.schemaController.editCombinationData);
-		this.app.post('/schema/getCombinations/:typeId', this.schemaController.getCombinations);
-		this.app.post('/schema/edit/:dataId', this.schemaController.editSchemaData);
-		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity);
-		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData);
-		this.app.delete('/schema/deleteCombinationData/:combinationDataId', this.schemaController.deleteCombinationData);
-		this.app.delete('/schema/deleteCombination/:combinationId', this.schemaController.deleteCombination);
-		this.app.post('/schema/createField/:typeId', this.schemaController.createField);
-		this.app.get('/schema/fields/:fieldId', this.schemaController.getFields);
-		this.app.get('/schema/field/:fieldId', this.schemaController.getField);
-		this.app.post('/schema/field/:fieldId', this.schemaController.editField);
-		this.app.delete('/schema/deleteField/:dataId', this.schemaController.deleteSchemaFieldData);
+		this.app.get('/schema/:typeId', this.schemaController.getSchema.bind(this.schemaController));
+		this.app.get('/schema/data/:valueId', this.schemaController.getSchemaData.bind(this.schemaController));
+		this.app.post('/schema/create/:valueId', this.schemaController.createSchemaData.bind(this.schemaController));
+		this.app.post('/schema/createCombination/:typeId', this.schemaController.createCombination.bind(this.schemaController));
+		this.app.post('/schema/editCombination/:combinationId', this.schemaController.editCombination.bind(this.schemaController));
+		this.app.post('/schema/copyCombination/:combinationId', this.schemaController.copyCombination.bind(this.schemaController));
+		this.app.post('/schema/createCombinationData/:combinationId', this.schemaController.createCombinationData.bind(this.schemaController));
+		this.app.post('/schema/copyCombinationData/:combinationDataId', this.schemaController.copyCombinationData.bind(this.schemaController));
+		this.app.get('/schema/combinationData/:combinationDataId', this.schemaController.getCombinationData.bind(this.schemaController));
+		this.app.post('/schema/combinationData/:combinationDataId', this.schemaController.editCombinationData.bind(this.schemaController));
+		this.app.post('/schema/getCombinations/:typeId', this.schemaController.getCombinations.bind(this.schemaController));
+		this.app.post('/schema/edit/:dataId', this.schemaController.editSchemaData.bind(this.schemaController));
+		this.app.post('/schema/necessity/:dataId', this.schemaController.editSchemaNecessity.bind(this.schemaController));
+		this.app.delete('/schema/delete/:dataId', this.schemaController.deleteSchemaData.bind(this.schemaController));
+		this.app.delete('/schema/deleteCombinationData/:combinationDataId', this.schemaController.deleteCombinationData.bind(this.schemaController));
+		this.app.delete('/schema/deleteCombination/:combinationId', this.schemaController.deleteCombination.bind(this.schemaController));
+		this.app.post('/schema/createField/:typeId', this.schemaController.createField.bind(this.schemaController));
+		this.app.get('/schema/fields/:fieldId', this.schemaController.getFields.bind(this.schemaController));
+		this.app.get('/schema/field/:fieldId', this.schemaController.getField.bind(this.schemaController));
+		this.app.post('/schema/field/:fieldId', this.schemaController.editField.bind(this.schemaController));
+		this.app.delete('/schema/deleteField/:dataId', this.schemaController.deleteSchemaFieldData.bind(this.schemaController));
 
 		this.app.post('/generateCoC/:typeId', this.generatorController.GenerateCoC);
 		this.app.post('/generateCNIT/:typeId', this.generatorController.GenerateCNIT);

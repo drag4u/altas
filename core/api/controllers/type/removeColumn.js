@@ -1,4 +1,4 @@
-module.exports = async function getAllTypes(req, res, utils) {
+module.exports = async function (req, res, utils) {
     const {typeId, versionVariant, columnId} = req.params;
 
 	let deleteQuery = `DELETE FROM matrix_value WHERE matrix_id IN (SELECT matrix_id FROM matrix WHERE type_id = ${utils.Esc(typeId)}) AND version_variant = ${utils.Esc(versionVariant)} AND column = ${utils.Esc(columnId)};`;

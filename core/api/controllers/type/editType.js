@@ -1,4 +1,4 @@
-module.exports = async function getAllTypes(req, res, utils) {
+module.exports = async function (req, res, utils) {
     const { name, code } = req.body;
 	const cocFileName = req.files.editCocFile ? `${req.files.editCocFile[0].filename}` : null;
 	const cnitFileName = req.files.editCNITFile ? `${req.files.editCNITFile[0].filename}` : null;

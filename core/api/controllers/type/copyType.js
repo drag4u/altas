@@ -1,4 +1,4 @@
-module.exports = async function getAllTypes(req, res, utils) {
+module.exports = async function (req, res, utils) {
 	const {id} = req.params;
 	utils.ExecuteAction(res, `SELECT * FROM type where type_id = ${utils.Esc(id)}`, rows => {
 		let type = rows[0];

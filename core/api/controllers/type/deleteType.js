@@ -1,4 +1,4 @@
-module.exports = async function getAllTypes(req, res, utils) {
+module.exports = async function (req, res, utils) {
     const {id} = req.params;
 	utils.ExecuteAction(res, `DELETE FROM type WHERE type_id = ${utils.Esc(id)}`, () => {
 		utils.ExecuteAction(res, `SELECT * from matrix where type_id = ${utils.Esc(id)}`, rows => {
