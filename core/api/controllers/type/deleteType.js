@@ -21,10 +21,8 @@ module.exports = async function (req, res, utils) {
 		  	);
 			delete from matrix where type_id = ${utils.Esc(id)};
 			delete from type where type_id = ${utils.Esc(id)};
-			commit;
 		`;
-		utils.ExecuteAction(res, query, (s) => {
-			console.log(s);
+		utils.ExecuteMultiple(res, query, () => {
 			if (fileRows.length > 0) {
 				utils.DeleteFileIfNotUsed(res, fileRows[0].coc_file);
 				utils.DeleteFileIfNotUsed(res, fileRows[0].cnit_file);

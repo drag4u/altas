@@ -8,7 +8,6 @@ const copyType = require('./type/copyType');
 const removeCoCFile = require('./type/removeCoCFile');
 const removeCNITFile = require('./type/removeCNITFile');
 const fetchType = require('./type/fetchType');
-const updateType = require('./type/updateType');
 const deleteType = require('./type/deleteType');
 const removeColumn = require('./type/removeColumn');
 const addColumn = require('./type/addColumn');
@@ -49,7 +48,6 @@ class TypeController {
 		this.app.get('/type/all', async (req, res) => await getAllTypes(req, res, this.utils));
 		this.app.get('/type/:id', async (req, res) => await fetchType(req, res, this.utils));
 		// UPDATE
-		this.app.post('/type/update', async (req, res) => await updateType(req, res, this.utils));
 		this.app.post('/type/edit/:id', this.upload.fields(this.EDIT_FIELD_FILE_SETTINGS), async (req, res) => await editType(req, res, this.utils));
 		// DELETE
 		this.app.delete('/type/:id', async (req, res) => await deleteType(req, res, this.utils));

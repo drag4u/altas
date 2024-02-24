@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 class ApiUtils
 {
 	constructor(logger, database)
@@ -17,6 +19,20 @@ class ApiUtils
 	{
 		this.logger.info("executing query: " + query);
 		this.database.all(query, (err, rows) => {
+			if (err)
+			{
+				this.logger.error("Getting database error: " + err);
+				res.status(500).json({error: 'Database error'});
+			} else {
+				successCallback(rows);
+			}
+		});
+	}
+
+	ExecuteMultiple(res, query, successCallback)
+	{
+		this.logger.info("executing query: " + query);
+		this.database.exec(query, (err, rows) => {
 			if (err)
 			{
 				this.logger.error("Getting database error: " + err);
