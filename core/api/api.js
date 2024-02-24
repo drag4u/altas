@@ -19,7 +19,7 @@ class API{
 		new SchemaController(this.utils, this.app);
 		new GeneratorController(this.utils, this.app);
 		
-		this.app.use(express.static('web'));
+		this.app.use(express.static('static'));
 		this.app.use(express.json());
 		this.app.set('views', path.join(process.cwd(), 'core/views'));
 		this.app.set('view engine', 'ejs');
