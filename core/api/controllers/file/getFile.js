@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports = async function (req, res, utils) {
-    logger.info("Fetching a file");
+    utils.logger.info("Fetching a file");
 	const filename = req.params.filename;
 	const fileDirectory = './data/files/';
 	const filePath = path.join(fileDirectory, filename);

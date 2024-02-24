@@ -127,6 +127,4 @@ class DatabaseInitializer {
 	}
 }
 
-module.exports = {
-	DatabaseInitializer
-};
+module.exports = DatabaseInitializer;

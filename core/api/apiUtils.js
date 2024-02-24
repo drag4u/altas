@@ -195,7 +195,4 @@ class ApiUtils
 	}
 }
 
-module.exports = 
-{
-	ApiUtils
-}
+module.exports = ApiUtils;

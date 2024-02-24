@@ -22,92 +22,38 @@ const copyCombinationData = require('./schema/copyCombinationData');
 
 class SchemaController {
 
-	constructor(utils) {
+	constructor(utils, app) {
 		this.utils = utils;
+		this.app = app;
+		this.InitializeEndpoints();
 	}
 
-	async getSchema (req, res) {
-		await getSchema(req, res, this.utils);
-	}
-
-	async getSchemaData (req, res) {
-		await getSchemaData(req, res, this.utils);
-	}
-
-	async createSchemaData (req, res) {
-		await createSchemaData(req, res, this.utils);
-	}
-
-	async editSchemaData (req, res) {
-		await editSchemaData(req, res, this.utils);
-	}
-	
-	async editSchemaNecessity (req, res) {
-		await editSchemaNecessity(req, res, this.utils);
-	}
-
-	async createField (req, res) {
-		await createField(req, res, this.utils);
-	}
-
-	async getFields (req, res) {
-		await getFields(req, res, this.utils);
-	}
-
-	async getField (req, res) {
-		await getField(req, res, this.utils);
-	}
-
-	async editField (req, res) {
-		await editField(req, res, this.utils);
-	}
-
-	async deleteSchemaData (req, res) {
-		await deleteSchemaData(req, res, this.utils);
-	}
-
-	async deleteSchemaFieldData (req, res) {
-		await deleteSchemaFieldData(req, res, this.utils);
-	}
-
-	async createCombination (req, res) {
-		await createCombination(req, res, this.utils);
-	}
-
-	async editCombination (req, res) {
-		await editCombination(req, res, this.utils);
-	}
-
-	async copyCombination (req, res) {
-		await copyCombination(req, res, this.utils);
-	}
-
-	async createCombinationData (req, res) {
-		await createCombinationData(req, res, this.utils);
-	}
-
-	async getCombinations (req, res) {
-		await getCombinations(req, res, this.utils);
-	}
-
-	async deleteCombinationData (req, res) {
-		await deleteCombinationData(req, res, this.utils);
-	}
-
-	async deleteCombination (req, res) {
-		await deleteCombination(req, res, this.utils);
-	}
-
-	async getCombinationData (req, res) {
-		await getCombinationData(req, res, this.utils);
-	}
-
-	async editCombinationData (req, res) {
-		await editCombinationData(req, res, this.utils);
-	}
-
-	async copyCombinationData (req, res) {
-		await copyCombinationData(req, res, this.utils);
+	InitializeEndpoints() {
+		// CREATE
+		this.app.post('/schema/create/:valueId', async (req, res) => await createSchemaData(req, res, this.utils));
+		this.app.post('/schema/createField/:typeId', async (req, res) => await createField(req, res, this.utils));
+		this.app.post('/schema/createCombination/:typeId', async (req, res) => await createCombination(req, res, this.utils));
+		this.app.post('/schema/copyCombination/:combinationId', async (req, res) => await copyCombination(req, res, this.utils));
+		this.app.post('/schema/createCombinationData/:combinationId', async (req, res) => await createCombinationData(req, res, this.utils));
+		this.app.post('/schema/copyCombinationData/:combinationDataId', async (req, res) => await copyCombinationData(req, res, this.utils));
+		// READ
+		this.app.get('/schema/:typeId', async (req, res) => await getSchema(req, res, this.utils));
+		this.app.get('/schema/data/:valueId', async (req, res) => await getSchemaData(req, res, this.utils));
+		this.app.get('/schema/fields/:fieldId', async (req, res) => await getFields(req, res, this.utils));
+		this.app.get('/schema/field/:fieldId', async (req, res) => await getField(req, res, this.utils));
+		this.app.post('/schema/getCombinations/:typeId', async (req, res) => await getCombinations(req, res, this.utils));
+		this.app.get('/schema/combinationData/:combinationDataId', async (req, res) => await getCombinationData(req, res, this.utils));
+		// UPDATE
+		this.app.post('/schema/field/:fieldId', async (req, res) => await editField(req, res, this.utils));
+		this.app.post('/schema/necessity/:dataId', async (req, res) => await editSchemaNecessity(req, res, this.utils));
+		this.app.post('/schema/edit/:dataId', async (req, res) => await editSchemaData(req, res, this.utils));
+		this.app.post('/schema/editCombination/:combinationId', async (req, res) => await editCombination(req, res, this.utils));
+		this.app.post('/schema/combinationData/:combinationDataId', async (req, res) => await editCombinationData(req, res, this.utils));
+		// DELETE
+		this.app.delete('/schema/delete/:dataId', async (req, res) => await deleteSchemaData(req, res, this.utils));
+		this.app.delete('/schema/deleteField/:dataId', async (req, res) => await deleteSchemaFieldData(req, res, this.utils));
+		this.app.delete('/schema/deleteCombination/:combinationId', async (req, res) => await deleteCombination(req, res, this.utils));
+		this.app.delete('/schema/deleteCombinationData/:combinationDataId', async (req, res) => await deleteCombinationData(req, res, this.utils));
 	}
 }
 module.exports = SchemaController;

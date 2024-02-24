@@ -36,6 +36,4 @@ class LoggerSetup {
 	}
 }
 
-module.exports = {
-    LoggerSetup
-};
+module.exports = LoggerSetup;
