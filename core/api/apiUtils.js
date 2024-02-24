@@ -27,6 +27,18 @@ class ApiUtils
 		});
 	}
 
+	DeleteFileIfNotUsed(res, fileName)
+	{
+		this.ExecuteAction(res, `SELECT * FROM type WHERE coc_file = '${this.Esc(fileName)}' OR cnit_file = '${this.Esc(fileName)}'`, rows => {
+			if (rows.length == 0) {
+				fs.unlink(`./data/files/${fileName}`, err => {
+					if (err)
+						this.logger.error("Error deleting file: " + err);
+				});
+			}
+		});
+	}
+
 	UpdateTypeSchema(res, typeId, callback)
 	{
 		this.ExecuteAction(res, `SELECT * FROM schema_values WHERE type_id = ${this.Esc(typeId)}`, schema_rows => {
