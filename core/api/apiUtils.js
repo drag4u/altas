@@ -45,6 +45,8 @@ class ApiUtils
 
 	DeleteFileIfNotUsed(res, fileName)
 	{
+		if (fileName == null)
+			return;
 		this.ExecuteAction(res, `SELECT * FROM type WHERE coc_file = '${this.Esc(fileName)}' OR cnit_file = '${this.Esc(fileName)}'`, rows => {
 			if (rows.length == 0) {
 				fs.unlink(`./data/files/${fileName}`, err => {

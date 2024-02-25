@@ -1,5 +1,6 @@
 function ShowTypeCreateModal()
 {
+	document.getElementById('typeForm').reset();
 	$('#createTypeModal').modal('show');
 }
 
@@ -127,6 +128,7 @@ function DeleteCoCFile()
 	API.DeleteCoCFile(typeId, () => {
 		$('#editCocFile').val('');
 		ShowTypeEditModal(typeId, () => {});
+		UpdateTypeTable();
 	});
 }
 
@@ -136,6 +138,7 @@ function DeleteCNITFile()
 	API.DeleteCNITFile(typeId, () => {
 		$('#editCNITFile').val('');
 		ShowTypeEditModal(typeId, () => {});
+		UpdateTypeTable();
 	});
 }
 
