@@ -295,6 +295,19 @@ class ApiController
 		});
 	}
 
+	CreateMultipleSchemaData(valueId, multipleData, callback)
+	{
+		$.ajax({
+			url: "http://"+ this.mainUrl + ":3000/schema/createMultiple/" + valueId,
+			type: "POST",
+			contentType : 'application/json',
+			dataType: "json",
+			data: JSON.stringify(multipleData),
+			success: response => callback(response),
+			error: (xhr, status) => console.log(xhr, status)
+		});
+	}
+
 	CreateSchemaCombination(typeId, data, callback)
 	{
 		$.ajax({

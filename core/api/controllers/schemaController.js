@@ -1,6 +1,7 @@
 const getSchema = require('./schema/getSchema');
 const getSchemaData = require('./schema/getSchemaData');
 const createSchemaData = require('./schema/createSchemaData');
+const createMultipleSchemaData = require('./schema/createMultipleSchemaData.js');
 const editSchemaData = require('./schema/editSchemaData');
 const editSchemaNecessity = require('./schema/editSchemaNecessity');
 const createField = require('./schema/createField');
@@ -31,6 +32,7 @@ class SchemaController {
 	InitializeEndpoints() {
 		// CREATE
 		this.app.post('/schema/create/:valueId', async (req, res) => await createSchemaData(req, res, this.utils));
+		this.app.post('/schema/createMultiple/:valueId', async (req, res) => await createMultipleSchemaData(req, res, this.utils));
 		this.app.post('/schema/createField/:typeId', async (req, res) => await createField(req, res, this.utils));
 		this.app.post('/schema/createCombination/:typeId', async (req, res) => await createCombination(req, res, this.utils));
 		this.app.post('/schema/copyCombination/:combinationId', async (req, res) => await copyCombination(req, res, this.utils));

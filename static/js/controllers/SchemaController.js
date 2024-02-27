@@ -663,18 +663,11 @@ function CopySchemaData()
 
 function PasteSchemaData()
 {
-	let amount = schemaDataBeingCopied.length;
-	schemaDataBeingCopied.forEach(row => {
-		API.CreateSchemaData(activeSchemaValue, row[0], row[1], () => {
-			amount--;
-			if (amount == 0)
-			{
-				ShowSchemaPage(schemasTypeId);
-				UpdateSchemaDataTable(activeSchemaValue, () => {
-					$('#newSchemaPlaceholder').removeClass('is-valid').val('');
-					$('#newSchemaData').removeClass('is-valid').val('');
-				});
-			}
+	API.CreateMultipleSchemaData(activeSchemaValue, schemaDataBeingCopied, () => {
+		ShowSchemaPage(schemasTypeId);
+		UpdateSchemaDataTable(activeSchemaValue, () => {
+			$('#newSchemaPlaceholder').removeClass('is-valid').val('');
+			$('#newSchemaData').removeClass('is-valid').val('');
 		});
 	});
 }
