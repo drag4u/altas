@@ -122,6 +122,7 @@ function SaveSchemaDataRow(dataId)
 		UpdateSchemaDataTable(activeSchemaValue, () => {
 			$('#editSchemaPlaceholder').removeClass('is-valid').val('');
 			$('#editSchemaData').removeClass('is-valid').val('');
+			document.getElementById("newSchemaPlaceholder").focus();
 		})
 	});
 }
@@ -150,6 +151,7 @@ function AddSchemaData()
 		UpdateSchemaDataTable(activeSchemaValue, () => {
 			$('#newSchemaPlaceholder').removeClass('is-valid').val('');
 			$('#newSchemaData').removeClass('is-valid').val('');
+			document.getElementById("newSchemaPlaceholder").focus();
 		})
 	});
 }
