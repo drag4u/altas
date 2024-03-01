@@ -1,8 +1,14 @@
-Serviso diegimas:
+Aplikacijos diegimas:
+1. Atsisiunčiame naujausią NODE.js (https://nodejs.org/en/download)
+2. Nuklonuotoje repozitorijoje paleidžiame komandą: `npm install`
+3. Įklijuojame data.zip turinį į pagrindinę direktoriją
+4. Paleidžiame serverį `node index.js`
+
+Serviso diegimas, kad automatiškai pasikeltų serveris:
 
 ```sudo nano /etc/systemd/system/altas.service```
 
-Failo turinys:
+Failo `altas.service` turinys:
 
 ```
 [Unit]
