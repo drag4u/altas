@@ -138,6 +138,13 @@ function CollectAndShowPlaceholderData()
 		$('#dataCollapseButton').click();
 	} else {
 		CollectPlaceholderData(placeholderData => {
+			const duplicatePlaceholders = placeholderData.filter((value, index, self) => {
+				return self.map(c => c.placeholder).indexOf(value.placeholder) != index && value.placeholder != null;
+			});
+
+			if (duplicatePlaceholders.length > 0)
+				alert('Rasti dublikuoti laukai: ' + duplicatePlaceholders.map(c => c.placeholder).join(', '));
+
 			$('#placeholderDataPreview').html('');
 			placeholderData.forEach(row => {
 				// append table rows
